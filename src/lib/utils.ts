@@ -91,49 +91,13 @@ export async function compressImage(file: File, maxDim = 960, quality = 0.82): P
   return data;
 }
 
-export const VIDEO_MAX_SECONDS = 30;
-
-export async function compressVideo(file: File, maxSeconds = VIDEO_MAX_SECONDS): Promise<string> {
-  const original = await readFileAsDataUrl(file);
-  if (original.length > 4_000_000) {
-    throw new Error(`المقطع كبير للرفع. اختصر لأقل من ${maxSeconds} ثانية أو صوّر بجودة أقل`);
-  }
-  return original;
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("تعذر قراءة الملف"));
-    reader.onload = () => resolve(String(reader.result ?? ""));
-    reader.readAsDataURL(file);
-  });
-}
-
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("تعذر قراءة الملف"));
-    reader.onload = () => resolve(String(reader.result ?? ""));
-    reader.readAsDataURL(blob);
-  });
-}
+export const VIDEO_MAX_SECONDS = 180;
 
 export async function fileToAttachment(file: File): Promise<{
   name: string;
   type: string;
   data: string;
 }> {
-  if (file.type.startsWith("image/")) {
-    const data = await compressImage(file, 1280, 0.8);
-    return { name: file.name, type: "image/jpeg", data };
-  }
-  if (file.type.startsWith("video/")) {
-    const data = await compressVideo(file);
-    return { name: file.name, type: file.type || "video/mp4", data };
-  }
-  if (file.size > 1_400_000) throw new Error("الحد الأقصى للمرفق حوالي 1 ميغابايت");
-  const data = await readFileAsDataUrl(file);
-  if (data.length > 1_800_000) throw new Error("الملف كبير جداً");
-  return { name: file.name, type: file.type || "application/octet-stream", data };
+  const { storeMedia } = await import("@/lib/media/client");
+  return storeMedia(file);
 }

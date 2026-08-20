@@ -22,6 +22,9 @@ import { Route as ApiRtcRouteImport } from './routes/api/rtc'
 import { Route as RSlugRouteImport } from './routes/r/$slug'
 import { Route as UUserIdRouteImport } from './routes/u/$userId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiMediaBlobRouteImport } from './routes/api/media/blob'
+import { Route as ApiMediaConfigRouteImport } from './routes/api/media/config'
+import { Route as ApiMediaSignRouteImport } from './routes/api/media/sign'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -88,6 +91,21 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMediaBlobRoute = ApiMediaBlobRouteImport.update({
+  id: '/api/media/blob',
+  path: '/api/media/blob',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMediaConfigRoute = ApiMediaConfigRouteImport.update({
+  id: '/api/media/config',
+  path: '/api/media/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMediaSignRoute = ApiMediaSignRouteImport.update({
+  id: '/api/media/sign',
+  path: '/api/media/sign',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -103,6 +121,9 @@ export interface FileRoutesByFullPath {
   '/r/$slug': typeof RSlugRoute
   '/u/$userId': typeof UUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/media/blob': typeof ApiMediaBlobRoute
+  '/api/media/config': typeof ApiMediaConfigRoute
+  '/api/media/sign': typeof ApiMediaSignRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,6 +139,9 @@ export interface FileRoutesByTo {
   '/r/$slug': typeof RSlugRoute
   '/u/$userId': typeof UUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/media/blob': typeof ApiMediaBlobRoute
+  '/api/media/config': typeof ApiMediaConfigRoute
+  '/api/media/sign': typeof ApiMediaSignRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,6 +158,9 @@ export interface FileRoutesById {
   '/r/$slug': typeof RSlugRoute
   '/u/$userId': typeof UUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/media/blob': typeof ApiMediaBlobRoute
+  '/api/media/config': typeof ApiMediaConfigRoute
+  '/api/media/sign': typeof ApiMediaSignRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,6 +178,9 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/u/$userId'
     | '/api/auth/$'
+    | '/api/media/blob'
+    | '/api/media/config'
+    | '/api/media/sign'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +196,9 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/u/$userId'
     | '/api/auth/$'
+    | '/api/media/blob'
+    | '/api/media/config'
+    | '/api/media/sign'
   id:
     | '__root__'
     | '/'
@@ -181,6 +214,9 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/u/$userId'
     | '/api/auth/$'
+    | '/api/media/blob'
+    | '/api/media/config'
+    | '/api/media/sign'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,6 +233,9 @@ export interface RootRouteChildren {
   RSlugRoute: typeof RSlugRoute
   UUserIdRoute: typeof UUserIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiMediaBlobRoute: typeof ApiMediaBlobRoute
+  ApiMediaConfigRoute: typeof ApiMediaConfigRoute
+  ApiMediaSignRoute: typeof ApiMediaSignRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -292,6 +331,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/media/blob': {
+      id: '/api/media/blob'
+      path: '/api/media/blob'
+      fullPath: '/api/media/blob'
+      preLoaderRoute: typeof ApiMediaBlobRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/media/config': {
+      id: '/api/media/config'
+      path: '/api/media/config'
+      fullPath: '/api/media/config'
+      preLoaderRoute: typeof ApiMediaConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/media/sign': {
+      id: '/api/media/sign'
+      path: '/api/media/sign'
+      fullPath: '/api/media/sign'
+      preLoaderRoute: typeof ApiMediaSignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -309,6 +369,9 @@ const rootRouteChildren: RootRouteChildren = {
   RSlugRoute: RSlugRoute,
   UUserIdRoute: UUserIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiMediaBlobRoute: ApiMediaBlobRoute,
+  ApiMediaConfigRoute: ApiMediaConfigRoute,
+  ApiMediaSignRoute: ApiMediaSignRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

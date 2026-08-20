@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { isRemoteMediaUrl } from "@/lib/media/limits";
 
 function guessType(src: string): string {
   if (src.startsWith("data:")) {
@@ -18,10 +19,16 @@ export function MediaVideo({
   className?: string;
   onEnded?: () => void;
 }) {
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const remote = isRemoteMediaUrl(src);
+  const [blobUrl, setBlobUrl] = useState<string | null>(remote ? src : null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    if (isRemoteMediaUrl(src)) {
+      setBlobUrl(src);
+      setFailed(false);
+      return;
+    }
     let objectUrl: string | null = null;
     let cancelled = false;
     setFailed(false);
@@ -47,7 +54,7 @@ export function MediaVideo({
   if (failed) {
     return (
       <p className="rounded-lg bg-elevated px-3 py-8 text-center text-sm text-muted">
-        تعذر تشغيل هذا المقطع. انشر قصة جديدة بعد التحديث.
+        تعذر تشغيل هذا المقطع.
       </p>
     );
   }
@@ -61,7 +68,7 @@ export function MediaVideo({
       autoPlay
       playsInline
       controls
-      preload="auto"
+      preload="metadata"
       onEnded={onEnded}
       onError={() => setFailed(true)}
     />

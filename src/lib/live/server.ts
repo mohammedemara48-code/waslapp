@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
 import { STICKERS } from "@/lib/stickers";
+import { assertStoredMedia } from "@/lib/media/limits";
 import type { ProfileRow, StoryRow } from "@/lib/chat/types";
 
 function displayAvatar(row: { avatar_data?: string | null; avatar_url?: string | null }): string | null {
@@ -331,13 +332,12 @@ export const publishStory = createServerFn({ method: "POST" })
   }) => {
     const kind = input.kind;
     const body = (input.body ?? "").trim().slice(0, 140);
-    const imageData = input.imageData ?? null;
+    const imageData = assertStoredMedia(input.imageData ?? null);
     const tint = (input.tint ?? "ink").slice(0, 80);
     const visibility = input.visibility === "all" || input.visibility === "me" ? input.visibility : "friends";
     if (kind === "text" && !body) throw new Error("اكتب سطراً للقصة");
     if (kind === "image" && !imageData) throw new Error("اختر صورة");
     if (kind === "video" && !imageData) throw new Error("اختر مقطعاً");
-    if (imageData && imageData.length > 4_000_000) throw new Error("الملف كبير");
     return { kind, body, imageData, tint, visibility };
   })
   .handler(async ({ context, data }) => {

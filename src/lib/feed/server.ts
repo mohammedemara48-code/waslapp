@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
+import { assertStoredMedia } from "@/lib/media/limits";
 import type { PostCommentRow, PostRow } from "@/lib/chat/types";
 
 function displayAvatar(row: { avatar_data?: string | null; avatar_url?: string | null }): string | null {
@@ -165,11 +166,10 @@ export const publishPost = createServerFn({ method: "POST" })
   }) => {
     const kind = input.kind;
     const body = (input.body ?? "").trim().slice(0, 500);
-    const mediaData = input.mediaData ?? null;
+    const mediaData = assertStoredMedia(input.mediaData ?? null);
     const visibility = input.visibility === "friends" ? "friends" : "all";
     if (kind === "text" && !body) throw new Error("اكتب شيئاً");
     if (kind !== "text" && !mediaData) throw new Error("أضف صورة أو فيديو");
-    if (mediaData && mediaData.length > 4_000_000) throw new Error("الملف كبير للرفع حالياً");
     return { kind, body, mediaData, visibility };
   })
   .handler(async ({ context, data }) => {

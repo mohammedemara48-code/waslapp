@@ -27,7 +27,7 @@ export function FeedPage() {
         setMedia(await compressImage(file, 1080, 0.82));
         setKind("image");
       } else {
-        toast.message("جارٍ تجهيز الفيديو…");
+        toast.message("جارٍ رفع الفيديو…");
         const att = await fileToAttachment(file);
         setMedia(att.data);
         if (kind !== "reel") setKind("video");

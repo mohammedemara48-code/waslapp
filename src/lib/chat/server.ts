@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
+import { assertStoredMedia } from "@/lib/media/limits";
 import type { MessageRow, ProfileRow, RoomDetail, RoomRow } from "./types";
 
 const slugSchema = z
@@ -193,12 +194,14 @@ export const sendMessage = createServerFn({ method: "POST" })
   }) => {
     const slug = slugSchema.parse(input.slug);
     const body = (input.body ?? "").trim();
-    const attachment = input.attachment ?? null;
+    let attachment = input.attachment ?? null;
     if (!body && !attachment) throw new Error("الرسالة فارغة");
     if (body.length > 2000) throw new Error("الرسالة طويلة جداً");
     if (attachment) {
       if (!attachment.name || attachment.name.length > 120) throw new Error("اسم الملف غير صالح");
-      if (attachment.data.length > 4_000_000) throw new Error("المرفق كبير");
+      const data = assertStoredMedia(attachment.data, "المرفق");
+      if (!data) throw new Error("المرفق فارغ");
+      attachment = { ...attachment, data };
     }
     return { slug, body, attachment };
   })
