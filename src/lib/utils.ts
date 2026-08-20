@@ -86,7 +86,7 @@ export async function compressImage(file: File, maxDim = 960, quality = 0.82): P
   return data;
 }
 
-export const VIDEO_MAX_SECONDS = 15;
+export const VIDEO_MAX_SECONDS = 30;
 
 function pickRecorderMime(): string {
   if (typeof MediaRecorder === "undefined") return "";
@@ -123,7 +123,7 @@ export async function compressVideo(file: File, maxSeconds = VIDEO_MAX_SECONDS):
     video.pause();
     video.currentTime = 0;
     const stream = clip.captureStream();
-    const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 450_000, audioBitsPerSecond: 48_000 });
+    const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 280_000, audioBitsPerSecond: 32_000 });
     const chunks: Blob[] = [];
     rec.ondataavailable = (e) => {
       if (e.data.size) chunks.push(e.data);
