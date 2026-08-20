@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Hash, Gift, ImagePlus, Menu, Mic, Paperclip, Send, Users, Video, X } from "lucide-react";
+import { Hash, Gift, ImagePlus, Menu, Mic, Paperclip, Pin, Search, Send, Star, Users, Video, X } from "lucide-react";
 import { toast } from "sonner";
 import { getRoom, joinRoom, listMessages, listRooms, sendMessage } from "@/lib/chat/server";
 import { notifyPeers } from "@/lib/social/server";
 import { notifyRoomPresence, sendSticker } from "@/lib/live/server";
+import { markRoomRead, pinRoomMessage, toggleMicQueue, listMicQueue, toggleSaveMessage } from "@/lib/engage/server";
 import { StickerMark, StickerPicker } from "@/components/sticker-picker";
 import { UserActions } from "@/components/user-actions";
 import type { MessageRow } from "@/lib/chat/types";
@@ -75,8 +76,14 @@ export function RoomView({ slug }: { slug: string }) {
     queryFn: () => listMessages({ data: { slug } }),
     refetchInterval: 4000,
   });
+  const micQuery = useQuery({
+    queryKey: ["mic", slug],
+    queryFn: () => listMicQueue({ data: slug }),
+    refetchInterval: 5000,
+  });
 
   const [draft, setDraft] = useState("");
+  const [filter, setFilter] = useState("");
   const [sending, setSending] = useState(false);
   const [attachment, setAttachment] = useState<{ name: string; type: string; data: string } | null>(null);
   const [roomsOpen, setRoomsOpen] = useState(false);
@@ -93,8 +100,10 @@ export function RoomView({ slug }: { slug: string }) {
 
   useEffect(() => {
     void joinRoom({ data: slug }).then(() => {
+      void markRoomRead({ data: slug }).then(() => queryClient.invalidateQueries({ queryKey: ["inbox"] }));
       void queryClient.invalidateQueries({ queryKey: ["room", slug] });
       void queryClient.invalidateQueries({ queryKey: ["rooms"] });
+      void queryClient.invalidateQueries({ queryKey: ["dms"] });
       void notifyRoomPresence({ data: { slug, name: slug } }).catch(() => {});
     });
   }, [slug, queryClient]);
@@ -148,7 +157,11 @@ export function RoomView({ slug }: { slug: string }) {
     });
   }, [p2p.onMessage, queryClient, slug]);
 
-  const messages = messagesQuery.data ?? [];
+  const messages = (messagesQuery.data ?? []).filter((m) =>
+    filter.trim()
+      ? `${m.body} ${m.display_name}`.toLowerCase().includes(filter.trim().toLowerCase())
+      : true,
+  );
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length, callKind]);
@@ -326,6 +339,28 @@ export function RoomView({ slug }: { slug: string }) {
             </li>
           ))}
       </ul>
+      <div className="mt-4">
+        <Button
+          size="sm"
+          variant="secondary"
+          className="w-full"
+          onClick={() =>
+            void toggleMicQueue({ data: slug }).then(() => queryClient.invalidateQueries({ queryKey: ["mic", slug] }))
+          }
+        >
+          <Mic className="size-4" />
+          طلب المايك
+        </Button>
+        {(micQuery.data ?? []).length > 0 ? (
+          <ol className="mt-2 space-y-1 text-xs text-muted">
+            {(micQuery.data ?? []).map((p, i) => (
+              <li key={p.user_id}>
+                {i + 1}. {p.display_name}
+              </li>
+            ))}
+          </ol>
+        ) : null}
+      </div>
     </div>
   );
 
@@ -357,6 +392,15 @@ export function RoomView({ slug }: { slug: string }) {
             </div>
             <p className="truncate text-xs text-muted">{room?.description}</p>
           </div>
+          <label className="relative hidden sm:block">
+            <Search className="pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2 text-subtle" />
+            <input
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder="بحث"
+              className="h-9 w-28 rounded-md border border-border bg-elevated pe-2 ps-7 text-xs"
+            />
+          </label>
           <div className="flex items-center gap-1">
             <NotificationBell />
             <Button variant="secondary" size="sm" onClick={() => void startCall("audio")} disabled={callKind !== null}>
@@ -420,6 +464,15 @@ export function RoomView({ slug }: { slug: string }) {
 
             <ScrollArea className="flex-1">
               <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6 md:px-8">
+                {roomQuery.data?.pinned ? (
+                  <div className="flex items-start gap-2 rounded-lg border border-accent/40 bg-elevated px-3 py-2 text-sm">
+                    <Pin className="mt-0.5 size-3.5 text-accent" />
+                    <span className="min-w-0">
+                      <span className="block text-[11px] text-subtle">مثبّت · {roomQuery.data.pinned.display_name}</span>
+                      {roomQuery.data.pinned.body}
+                    </span>
+                  </div>
+                ) : null}
                 {grouped.length === 0 && !messagesQuery.isPending ? (
                   <div className="rounded-xl border border-dashed border-border px-6 py-16 text-center">
                     <p className="font-display text-2xl">الغرفة هادئة</p>
@@ -490,6 +543,35 @@ export function RoomView({ slug }: { slug: string }) {
                                 >
                                   {msg.attachment_name ?? "ملف"}
                                 </a>
+                              ) : null}
+                            </div>
+                            <div className="mt-1 flex gap-1">
+                              <button
+                                type="button"
+                                className="text-subtle hover:text-fg"
+                                aria-label="حفظ"
+                                onClick={() =>
+                                  void toggleSaveMessage({ data: msg.id }).then((r) =>
+                                    toast.success(r.saved ? "حُفظت الرسالة" : "أُزيلت من المحفوظات"),
+                                  )
+                                }
+                              >
+                                <Star className="size-3.5" />
+                              </button>
+                              {room?.created_by === user?.id ? (
+                                <button
+                                  type="button"
+                                  className="text-subtle hover:text-fg"
+                                  aria-label="تثبيت"
+                                  onClick={() =>
+                                    void pinRoomMessage({ data: { slug, messageId: msg.id } }).then(() => {
+                                      toast.success("ثُبّتت الرسالة");
+                                      void queryClient.invalidateQueries({ queryKey: ["room", slug] });
+                                    })
+                                  }
+                                >
+                                  <Pin className="size-3.5" />
+                                </button>
                               ) : null}
                             </div>
                           </div>

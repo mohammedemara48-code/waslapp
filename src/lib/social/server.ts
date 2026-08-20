@@ -427,7 +427,14 @@ export const listDirects = createServerFn({ method: "GET" })
         r.id, r.slug, r.name, r.description, r.kind, r.created_by, r.created_at,
         2::int as member_count,
         lm.body as last_body,
-        lm.created_at as last_at
+        lm.created_at as last_at,
+        r.pinned_message_id,
+        (
+          select count(*)::int from messages msg
+          where msg.room_id = r.id
+            and msg.user_id <> ${context.userId}
+            and (mine.last_read_at is null or msg.created_at > mine.last_read_at)
+        ) as unread
       from rooms r
       join room_members mine on mine.room_id = r.id and mine.user_id = ${context.userId}
       left join lateral (
@@ -477,6 +484,10 @@ export const notifyPeers = createServerFn({ method: "POST" })
       where room_id = ${room.id} and user_id <> ${context.userId}
     `;
     for (const other of others) {
+      const muted = await sql<{ muter_id: string }>`
+        select muter_id from mutes where muter_id = ${other.user_id} and muted_id = ${context.userId} limit 1
+      `;
+      if (muted[0]) continue;
       await notify(sql, other.user_id, data.kind, data.title, data.body, `/r/${data.slug}`);
     }
     return { ok: true as const };

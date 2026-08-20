@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { ImageIcon, Video } from "lucide-react";
 import { toast } from "sonner";
 import { listPosts, publishPost } from "@/lib/feed/server";
+import { listOnline } from "@/lib/live/server";
+import { listRooms } from "@/lib/chat/server";
 import { compressImage, cn, fileToAttachment } from "@/lib/utils";
 import { AppShell } from "@/components/app-shell";
 import { MediaVideo } from "@/components/media-video";
@@ -14,6 +17,8 @@ import { Textarea } from "@/components/ui/textarea";
 export function FeedPage() {
   const queryClient = useQueryClient();
   const feed = useQuery({ queryKey: ["posts"], queryFn: () => listPosts(), refetchInterval: 12000 });
+  const online = useQuery({ queryKey: ["online"], queryFn: () => listOnline(), refetchInterval: 15000 });
+  const rooms = useQuery({ queryKey: ["rooms"], queryFn: () => listRooms(), refetchInterval: 20000 });
   const [kind, setKind] = useState<"text" | "image" | "video" | "reel">("text");
   const [body, setBody] = useState("");
   const [media, setMedia] = useState<string | null>(null);
@@ -63,6 +68,29 @@ export function FeedPage() {
           <p className="text-sm text-accent">منشورات وريلز الأعضاء</p>
           <h1 className="mt-1 font-display text-3xl">الخط الزمني</h1>
         </div>
+        {(online.data?.length ?? 0) > 0 ? (
+          <div className="flex gap-2 overflow-x-auto text-xs">
+            {(online.data ?? []).slice(0, 8).map((p) => (
+              <Link
+                key={p.user_id}
+                to="/u/$userId"
+                params={{ userId: p.user_id }}
+                className="shrink-0 rounded-full border border-border px-3 py-1.5 text-muted"
+              >
+                {p.display_name} · متصل
+              </Link>
+            ))}
+          </div>
+        ) : null}
+        {(rooms.data?.length ?? 0) > 0 ? (
+          <div className="flex gap-2 overflow-x-auto text-xs">
+            {(rooms.data ?? []).slice(0, 6).map((r) => (
+              <Link key={r.slug} to="/r/$slug" params={{ slug: r.slug }} className="shrink-0 rounded-full bg-elevated px-3 py-1.5 text-muted">
+                #{r.name}
+              </Link>
+            ))}
+          </div>
+        ) : null}
 
         <section className="space-y-3 rounded-xl border border-border bg-surface p-4">
           <div className="flex flex-wrap gap-1">

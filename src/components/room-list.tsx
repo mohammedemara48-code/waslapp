@@ -40,7 +40,14 @@ export function RoomList({
                       {room.last_body ?? room.description}
                     </span>
                   </span>
-                  <span className="pt-0.5 text-[11px] tabular-nums text-subtle">{room.member_count}</span>
+                  <span className="flex flex-col items-end gap-1 pt-0.5 text-[11px] tabular-nums text-subtle">
+                    {room.unread ? (
+                      <span className="min-w-4 rounded-full bg-danger px-1 text-center leading-4 text-white">
+                        {room.unread > 9 ? "9+" : room.unread}
+                      </span>
+                    ) : null}
+                    {room.member_count}
+                  </span>
                 </Link>
               </li>
             );

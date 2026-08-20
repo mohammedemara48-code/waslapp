@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { getPublicProfile } from "@/lib/live/server";
 import { listUserPosts } from "@/lib/feed/server";
-import { initials } from "@/lib/utils";
+import { formatLastSeen, initials } from "@/lib/utils";
 import { AppShell } from "@/components/app-shell";
 import { PostCard } from "@/components/post-card";
+import { ShareInvite } from "@/components/share-invite";
 import { UserActions } from "@/components/user-actions";
 import { NameBadge } from "@/components/name-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -52,13 +53,16 @@ export function PublicProfile({ userId }: { userId: string }) {
               {profile.display_name} <NameBadge badge={profile.badge} />
             </h1>
             <p className="text-sm text-muted">رقم {profile.wasl_no ?? "—"} · @{profile.username ?? "بدون"}</p>
-            <p className="mt-1 text-xs text-subtle">{profile.online ? "متصل الآن" : "غير متصل"}</p>
+            <p className="mt-1 text-xs text-subtle">{formatLastSeen(profile.last_seen, profile.online)}</p>
           </div>
         </div>
         {profile.bio ? <p className="text-sm text-muted">{profile.bio}</p> : null}
         {profile.phone ? <p className="text-sm text-subtle">تواصل: {profile.phone}</p> : null}
         {mine ? (
-          <p className="text-sm text-muted">هذا ملفك. عدّله من حسابي.</p>
+          <div className="flex flex-wrap gap-2">
+            <p className="text-sm text-muted">هذا ملفك. عدّله من حسابي.</p>
+            <ShareInvite waslNo={profile.wasl_no} />
+          </div>
         ) : blocked ? (
           <p className="text-sm text-danger">محظور</p>
         ) : (

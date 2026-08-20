@@ -241,6 +241,33 @@ async function createPgliteSql(): Promise<Sql> {
         created_at timestamptz not null default now()
       );
       create index if not exists post_comments_post_idx on post_comments (post_id, id);
+      alter table if exists room_members add column if not exists last_read_at timestamptz;
+      alter table if exists rooms add column if not exists pinned_message_id int;
+      create table if not exists mutes (
+        muter_id text not null,
+        muted_id text not null,
+        created_at timestamptz not null default now(),
+        primary key (muter_id, muted_id)
+      );
+      create table if not exists reports (
+        id serial primary key,
+        reporter_id text not null,
+        target_id text not null,
+        reason text not null default '',
+        created_at timestamptz not null default now()
+      );
+      create table if not exists saved_messages (
+        user_id text not null,
+        message_id int not null,
+        created_at timestamptz not null default now(),
+        primary key (user_id, message_id)
+      );
+      create table if not exists mic_queue (
+        room_id int not null,
+        user_id text not null,
+        requested_at timestamptz not null default now(),
+        primary key (room_id, user_id)
+      );
     `);
     await pg.exec(`
       create sequence if not exists wasl_no_seq start with 1001;

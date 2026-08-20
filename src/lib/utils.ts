@@ -21,6 +21,23 @@ export function formatClock(iso: string): string {
   }).format(d);
 }
 
+export function formatLastSeen(iso: string | null | undefined, online?: boolean): string {
+  if (online) return "متصل الآن";
+  if (!iso) return "غير متصل";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "غير متصل";
+  const mins = Math.round((Date.now() - d.getTime()) / 60000);
+  if (mins < 2) return "ظهر للتو";
+  if (mins < 60) return `آخر ظهور منذ ${mins} د`;
+  if (mins < 24 * 60) return `آخر ظهور منذ ${Math.round(mins / 60)} س`;
+  return `آخر ظهور ${formatDay(iso)}`;
+}
+
+export function inviteUrl(waslNo: number | null | undefined): string {
+  if (!waslNo || typeof window === "undefined") return "";
+  return `${window.location.origin}/n/${waslNo}`;
+}
+
 export function formatDay(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";

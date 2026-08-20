@@ -1,11 +1,14 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Hash, House, MessageCircle, Sparkles, UserRound, Users } from "lucide-react";
 import { AccountMenu } from "@/components/account-menu";
 import { BrandMark } from "@/components/brand-mark";
 import { InstallPrompt } from "@/components/install-prompt";
 import { MembersRail } from "@/components/members-rail";
 import { NotificationBell } from "@/components/notification-bell";
+import { CountDot } from "@/components/inbox-badge";
+import { getInboxCounts } from "@/lib/engage/server";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -27,6 +30,12 @@ export function AppShell({
   sidebar?: ReactNode;
 }) {
   const current = active === "chat" ? "rooms" : active;
+  const counts = useQuery({
+    queryKey: ["inbox"],
+    queryFn: () => getInboxCounts(),
+    refetchInterval: 8000,
+  });
+  const dms = counts.data?.dms ?? 0;
   return (
     <div className="flex min-h-dvh bg-bg text-fg">
       <aside className="hidden w-72 shrink-0 flex-col border-l border-border bg-surface lg:flex">
@@ -48,11 +57,14 @@ export function AppShell({
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  "flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm",
+                  "relative flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm",
                   on ? "bg-elevated text-fg shadow-glow" : "text-muted hover:bg-elevated/70 hover:text-fg",
                 )}
               >
-                <Icon className="size-4 text-accent" />
+                <span className="relative">
+                  <Icon className="size-4 text-accent" />
+                  {item.key === "messages" ? <CountDot n={dms} /> : null}
+                </span>
                 {item.label}
               </Link>
             );
@@ -88,11 +100,14 @@ export function AppShell({
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  "flex min-h-12 flex-col items-center justify-center gap-0.5 text-xs",
+                  "relative flex min-h-12 flex-col items-center justify-center gap-0.5 text-xs",
                   on ? "text-accent" : "text-muted",
                 )}
               >
-                <Icon className="size-4" />
+                <span className="relative">
+                  <Icon className="size-4" />
+                  {item.key === "messages" ? <CountDot n={dms} /> : null}
+                </span>
                 {item.label}
               </Link>
             );

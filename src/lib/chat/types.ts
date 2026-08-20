@@ -9,6 +9,8 @@ export type RoomRow = {
   member_count: number;
   last_body: string | null;
   last_at: string | null;
+  unread?: number;
+  pinned_message_id?: number | null;
 };
 
 export type MessageRow = {
@@ -41,6 +43,7 @@ export type ProfileRow = {
 export type RoomDetail = {
   room: RoomRow;
   members: ProfileRow[];
+  pinned?: { id: number; body: string; display_name: string } | null;
 };
 
 export type FriendshipRow = {

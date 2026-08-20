@@ -16,9 +16,11 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as RoomsRouteImport } from './routes/rooms'
+import { Route as SavedRouteImport } from './routes/saved'
 import { Route as StoriesRouteImport } from './routes/stories'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as ApiRtcRouteImport } from './routes/api/rtc'
+import { Route as NNoRouteImport } from './routes/n/$no'
 import { Route as RSlugRouteImport } from './routes/r/$slug'
 import { Route as UUserIdRouteImport } from './routes/u/$userId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -61,6 +63,11 @@ const RoomsRoute = RoomsRouteImport.update({
   path: '/rooms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SavedRoute = SavedRouteImport.update({
+  id: '/saved',
+  path: '/saved',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StoriesRoute = StoriesRouteImport.update({
   id: '/stories',
   path: '/stories',
@@ -74,6 +81,11 @@ const ToolsRoute = ToolsRouteImport.update({
 const ApiRtcRoute = ApiRtcRouteImport.update({
   id: '/api/rtc',
   path: '/api/rtc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NNoRoute = NNoRouteImport.update({
+  id: '/n/$no',
+  path: '/n/$no',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RSlugRoute = RSlugRouteImport.update({
@@ -115,9 +127,11 @@ export interface FileRoutesByFullPath {
   '/me': typeof MeRoute
   '/messages': typeof MessagesRoute
   '/rooms': typeof RoomsRoute
+  '/saved': typeof SavedRoute
   '/stories': typeof StoriesRoute
   '/tools': typeof ToolsRoute
   '/api/rtc': typeof ApiRtcRoute
+  '/n/$no': typeof NNoRoute
   '/r/$slug': typeof RSlugRoute
   '/u/$userId': typeof UUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -133,9 +147,11 @@ export interface FileRoutesByTo {
   '/me': typeof MeRoute
   '/messages': typeof MessagesRoute
   '/rooms': typeof RoomsRoute
+  '/saved': typeof SavedRoute
   '/stories': typeof StoriesRoute
   '/tools': typeof ToolsRoute
   '/api/rtc': typeof ApiRtcRoute
+  '/n/$no': typeof NNoRoute
   '/r/$slug': typeof RSlugRoute
   '/u/$userId': typeof UUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -152,9 +168,11 @@ export interface FileRoutesById {
   '/me': typeof MeRoute
   '/messages': typeof MessagesRoute
   '/rooms': typeof RoomsRoute
+  '/saved': typeof SavedRoute
   '/stories': typeof StoriesRoute
   '/tools': typeof ToolsRoute
   '/api/rtc': typeof ApiRtcRoute
+  '/n/$no': typeof NNoRoute
   '/r/$slug': typeof RSlugRoute
   '/u/$userId': typeof UUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -172,9 +190,11 @@ export interface FileRouteTypes {
     | '/me'
     | '/messages'
     | '/rooms'
+    | '/saved'
     | '/stories'
     | '/tools'
     | '/api/rtc'
+    | '/n/$no'
     | '/r/$slug'
     | '/u/$userId'
     | '/api/auth/$'
@@ -190,9 +210,11 @@ export interface FileRouteTypes {
     | '/me'
     | '/messages'
     | '/rooms'
+    | '/saved'
     | '/stories'
     | '/tools'
     | '/api/rtc'
+    | '/n/$no'
     | '/r/$slug'
     | '/u/$userId'
     | '/api/auth/$'
@@ -208,9 +230,11 @@ export interface FileRouteTypes {
     | '/me'
     | '/messages'
     | '/rooms'
+    | '/saved'
     | '/stories'
     | '/tools'
     | '/api/rtc'
+    | '/n/$no'
     | '/r/$slug'
     | '/u/$userId'
     | '/api/auth/$'
@@ -227,9 +251,11 @@ export interface RootRouteChildren {
   MeRoute: typeof MeRoute
   MessagesRoute: typeof MessagesRoute
   RoomsRoute: typeof RoomsRoute
+  SavedRoute: typeof SavedRoute
   StoriesRoute: typeof StoriesRoute
   ToolsRoute: typeof ToolsRoute
   ApiRtcRoute: typeof ApiRtcRoute
+  NNoRoute: typeof NNoRoute
   RSlugRoute: typeof RSlugRoute
   UUserIdRoute: typeof UUserIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -289,6 +315,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoomsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/saved': {
+      id: '/saved'
+      path: '/saved'
+      fullPath: '/saved'
+      preLoaderRoute: typeof SavedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/stories': {
       id: '/stories'
       path: '/stories'
@@ -308,6 +341,13 @@ declare module '@tanstack/react-router' {
       path: '/api/rtc'
       fullPath: '/api/rtc'
       preLoaderRoute: typeof ApiRtcRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/n/$no': {
+      id: '/n/$no'
+      path: '/n/$no'
+      fullPath: '/n/$no'
+      preLoaderRoute: typeof NNoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/r/$slug': {
@@ -363,9 +403,11 @@ const rootRouteChildren: RootRouteChildren = {
   MeRoute: MeRoute,
   MessagesRoute: MessagesRoute,
   RoomsRoute: RoomsRoute,
+  SavedRoute: SavedRoute,
   StoriesRoute: StoriesRoute,
   ToolsRoute: ToolsRoute,
   ApiRtcRoute: ApiRtcRoute,
+  NNoRoute: NNoRoute,
   RSlugRoute: RSlugRoute,
   UUserIdRoute: UUserIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

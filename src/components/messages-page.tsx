@@ -47,6 +47,11 @@ export function MessagesPage() {
                 <span className="block text-sm font-medium">{room.name}</span>
                 <span className="mt-1 block text-xs text-muted">{room.last_body ?? "ابدأ الحديث"}</span>
               </span>
+              {room.unread ? (
+                <span className="min-w-5 rounded-full bg-danger px-1.5 text-center text-[11px] leading-5 text-white">
+                  {room.unread > 9 ? "9+" : room.unread}
+                </span>
+              ) : null}
             </Link>
           ))}
         </div>

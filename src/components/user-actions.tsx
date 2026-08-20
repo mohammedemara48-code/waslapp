@@ -1,8 +1,9 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Ban, MessageCircle, Mic, UserPlus, UserRound, Video } from "lucide-react";
+import { Ban, Flag, MessageCircle, Mic, UserPlus, UserRound, Video, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { sendFriendRequest, openDirect } from "@/lib/social/server";
 import { blockUser } from "@/lib/live/server";
+import { muteUser, reportUser } from "@/lib/engage/server";
 import type { ProfileRow } from "@/lib/chat/types";
 import { initials } from "@/lib/utils";
 import { NameBadge } from "@/components/name-badge";
@@ -40,6 +41,24 @@ export function UserActions({
       await navigate({ to: "/r/$slug", params: { slug } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "أضف الصديق أولاً");
+    }
+  }
+
+  async function mute() {
+    try {
+      const res = await muteUser({ data: person.user_id });
+      toast.success(res.muted ? "تم الكتم — لن تصلك تنبيهات منه" : "أُلغي الكتم");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "تعذر الكتم");
+    }
+  }
+
+  async function report() {
+    try {
+      await reportUser({ data: { userId: person.user_id, reason: "بلاغ من التطبيق" } });
+      toast.success("وصل البلاغ للإدارة");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "تعذر الإبلاغ");
     }
   }
 
@@ -92,6 +111,14 @@ export function UserActions({
           اتصال فيديو
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => void mute()}>
+          <VolumeX className="size-4" />
+          كتم التنبيهات
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => void report()}>
+          <Flag className="size-4" />
+          إبلاغ
+        </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => void block()}>
           <Ban className="size-4" />
           حظر

@@ -30,7 +30,9 @@ export const listRooms = createServerFn({ method: "GET" })
         r.created_at,
         (select count(*)::int from room_members m where m.room_id = r.id) as member_count,
         lm.body as last_body,
-        lm.created_at as last_at
+        lm.created_at as last_at,
+        r.pinned_message_id,
+        0::int as unread
       from rooms r
       left join lateral (
         select body, created_at
@@ -60,7 +62,9 @@ export const getRoom = createServerFn({ method: "GET" })
         r.created_at,
         (select count(*)::int from room_members m where m.room_id = r.id) as member_count,
         null::text as last_body,
-        null::timestamptz as last_at
+        null::timestamptz as last_at,
+        r.pinned_message_id,
+        0::int as unread
       from rooms r
       where r.slug = ${slug}
       limit 1
@@ -89,6 +93,17 @@ export const getRoom = createServerFn({ method: "GET" })
       where m.room_id = ${room.id}
       order by m.joined_at asc
     `;
+    let pinned: RoomDetail["pinned"] = null;
+    if (room.pinned_message_id) {
+      const pin = await sql<{ id: number; body: string; display_name: string }>`
+        select m.id, m.body, coalesce(p.display_name, 'عضو') as display_name
+        from messages m
+        left join profiles p on p.user_id = m.user_id
+        where m.id = ${room.pinned_message_id} and m.room_id = ${room.id}
+        limit 1
+      `;
+      pinned = pin[0] ?? null;
+    }
     return {
       room,
       members: members.map((p) => ({
@@ -100,6 +115,7 @@ export const getRoom = createServerFn({ method: "GET" })
         bio: p.bio,
         avatar_url: avatarOf(p),
       })),
+      pinned,
     };
   });
 
@@ -262,6 +278,10 @@ export const sendMessage = createServerFn({ method: "POST" })
       `;
       const preview = data.body || (data.attachment ? "مرفق جديد" : "رسالة");
       for (const other of others) {
+        const muted = await sql<{ muter_id: string }>`
+          select muter_id from mutes where muter_id = ${other.user_id} and muted_id = ${context.userId} limit 1
+        `;
+        if (muted[0]) continue;
         await sql`
           insert into notifications (user_id, kind, title, body, href)
           values (
