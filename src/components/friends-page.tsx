@@ -23,7 +23,7 @@ export function FriendsPage() {
   const results = useQuery({
     queryKey: ["people", q],
     queryFn: () => searchPeople({ data: q }),
-    enabled: q.trim().length >= 2,
+    enabled: q.trim().length >= 1,
   });
 
   async function add(userId: string) {
@@ -67,12 +67,12 @@ export function FriendsPage() {
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="مثلاً nora أو أحمد"
+            placeholder="اسم أو رقم وصل مثل 1001"
             className="pr-10"
           />
         </label>
 
-        {q.trim().length >= 2 ? (
+        {q.trim().length >= 1 ? (
           <section className="space-y-2">
             <h2 className="text-xs text-subtle">نتائج البحث</h2>
             {(results.data ?? []).length === 0 && !results.isPending ? (
@@ -86,7 +86,9 @@ export function FriendsPage() {
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm">{person.display_name}</p>
-                  <p className="truncate text-xs text-muted">@{person.username ?? "بدون"}</p>
+                  <p className="truncate text-xs text-muted">
+                    رقم {person.wasl_no ?? "—"} · @{person.username ?? "بدون"}
+                  </p>
                 </div>
                 <Button size="sm" variant="secondary" onClick={() => void add(person.user_id)}>
                   <UserPlus className="size-4" />
@@ -141,7 +143,7 @@ export function FriendsPage() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm">{person.display_name}</p>
                 <p className="truncate text-xs text-muted">
-                  @{person.username ?? "بدون"}
+                  رقم {person.wasl_no ?? "—"} · @{person.username ?? "بدون"}
                   {person.online ? " · متصل" : " · غير متصل"}
                 </p>
               </div>
@@ -163,7 +165,7 @@ export function FriendsPage() {
         <section className="space-y-2">
           <h2 className="text-xs text-subtle">قائمتك</h2>
           {(list.data?.friends.length ?? 0) === 0 ? (
-            <p className="text-sm text-muted">لا أصدقاء بعد. ابحث باسم المستخدم وأرسل طلباً.</p>
+            <p className="text-sm text-muted">لا أصدقاء بعد. ابحث بالاسم أو رقم وصل من قائمة المشتركين.</p>
           ) : null}
           {list.data?.friends.map((item) => (
             <div key={item.id} className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5">
@@ -174,7 +176,7 @@ export function FriendsPage() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm">{item.peer.display_name}</p>
                 <p className="truncate text-xs text-muted">
-                  @{item.peer.username ?? "بدون"}
+                  رقم {item.peer.wasl_no ?? "—"} · @{item.peer.username ?? "بدون"}
                   {item.peer.online ? " · متصل" : " · غير متصل"}
                 </p>
               </div>

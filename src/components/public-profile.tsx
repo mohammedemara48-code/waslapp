@@ -45,7 +45,7 @@ export function PublicProfile({ userId }: { userId: string }) {
             <h1 className="font-display text-3xl">
               {profile.display_name} <NameBadge badge={profile.badge} />
             </h1>
-            <p className="text-sm text-muted">@{profile.username ?? "بدون"}</p>
+            <p className="text-sm text-muted">رقم {profile.wasl_no ?? "—"} · @{profile.username ?? "بدون"}</p>
             <p className="mt-1 text-xs text-subtle">{profile.online ? "متصل الآن" : "غير متصل"}</p>
           </div>
         </div>

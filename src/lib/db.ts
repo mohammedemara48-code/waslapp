@@ -216,6 +216,12 @@ async function createPgliteSql(): Promise<Sql> {
       );
       alter table if exists profiles add column if not exists role text;
       alter table if exists profiles add column if not exists badge text;
+      alter table if exists profiles add column if not exists wasl_no integer;
+    `);
+    await pg.exec(`
+      create sequence if not exists wasl_no_seq start with 1001;
+      alter table if exists profiles alter column wasl_no set default nextval('wasl_no_seq');
+      update profiles set wasl_no = nextval('wasl_no_seq') where wasl_no is null;
     `);
     const cols = await pg.query<{ column_name: string }>(
       "select column_name from information_schema.columns where table_name = 'profiles' order by ordinal_position",

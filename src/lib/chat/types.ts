@@ -35,6 +35,7 @@ export type ProfileRow = {
   online?: boolean;
   last_seen?: string | null;
   badge?: string | null;
+  wasl_no?: number | null;
 };
 
 export type RoomDetail = {

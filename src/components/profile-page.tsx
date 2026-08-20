@@ -79,6 +79,9 @@ export function ProfilePage() {
         <div>
           <p className="text-sm text-accent">ملفك الظاهر للأصدقاء</p>
           <h1 className="mt-1 font-display text-3xl">حسابي</h1>
+          {me.data?.wasl_no ? (
+            <p className="mt-2 text-sm text-muted">رقم وصل: <span className="text-fg">{me.data.wasl_no}</span> — شاركه ليضيفك الأصدقاء</p>
+          ) : null}
         </div>
 
         <div className="flex items-center gap-4">

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, Heart, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Heart, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { likeStory, listStories, publishStory, viewStory } from "@/lib/live/server";
 import { compressImage, cn, fileToAttachment, initials } from "@/lib/utils";
@@ -46,7 +46,9 @@ export function StoriesPage() {
   const [track, setTrack] = useState("off");
   const [image, setImage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [active, setActive] = useState<StoryRow | null>(null);
+  const [activePack, setActivePack] = useState<StoryRow[]>([]);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const active = activePack[activeIdx] ?? null;
 
   const items = feed.data ?? [];
   const grouped = useMemo(() => {
@@ -60,13 +62,10 @@ export function StoriesPage() {
   }, [items]);
 
   useEffect(() => {
-    if (!active) {
-      stopStoryMusic();
-      return;
-    }
-    playStoryMusic(parseStoryStyle(active.tint).music);
-    return () => stopStoryMusic();
-  }, [active]);
+    if (!active || active.kind === "video") return;
+    const t = window.setTimeout(() => goStory(1), 6500);
+    return () => window.clearTimeout(t);
+  }, [active?.id, activeIdx]);
 
   async function publish() {
     setBusy(true);
@@ -86,10 +85,25 @@ export function StoriesPage() {
     }
   }
 
-  async function openStory(story: StoryRow) {
-    setActive(story);
-    await viewStory({ data: story.id }).catch(() => {});
+  async function openStory(pack: StoryRow[], index = 0) {
+    setActivePack(pack);
+    setActiveIdx(index);
+    const story = pack[index];
+    if (story) await viewStory({ data: story.id }).catch(() => {});
     void queryClient.invalidateQueries({ queryKey: ["stories"] });
+  }
+
+  function goStory(delta: number) {
+    const next = activeIdx + delta;
+    if (next < 0 || next >= activePack.length) {
+      setActivePack([]);
+      setActiveIdx(0);
+      stopStoryMusic();
+      return;
+    }
+    setActiveIdx(next);
+    const story = activePack[next];
+    if (story) void viewStory({ data: story.id }).catch(() => {});
   }
 
   const packed = active ? parseStoryStyle(active.tint) : null;
@@ -123,7 +137,7 @@ export function StoriesPage() {
                 key={first.user_id}
                 type="button"
                 className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface px-3 py-3 text-right"
-                onClick={() => void openStory(first)}
+                onClick={() => void openStory(pack, 0)}
               >
                 <span className="rounded-full bg-accent p-px">
                   <Avatar className="size-12 border-2 border-surface">
@@ -209,30 +223,62 @@ export function StoriesPage() {
         open={Boolean(active)}
         onOpenChange={(open) => {
           if (!open) {
-            setActive(null);
+            setActivePack([]);
+            setActiveIdx(0);
             stopStoryMusic();
           }
         }}
       >
         <DialogContent className="overflow-hidden p-0">
           {active && packed ? (
-            <div className={cn("flex min-h-80 flex-col justify-between p-6", tintClass(packed.bg))}>
+            <div className={cn("relative flex min-h-80 flex-col justify-between p-6", tintClass(packed.bg))}>
+              {activePack.length > 1 ? (
+                <div className="mb-3 flex gap-1">
+                  {activePack.map((s, i) => (
+                    <span
+                      key={s.id}
+                      className={cn("h-1 flex-1 rounded-full", i <= activeIdx ? "bg-accent" : "bg-fg/20")}
+                    />
+                  ))}
+                </div>
+              ) : null}
               <div className="flex items-center gap-2">
                 <Avatar className="size-8">
                   {active.avatar_url ? <AvatarImage src={active.avatar_url} alt="" /> : null}
                   <AvatarFallback>{initials(active.display_name)}</AvatarFallback>
                 </Avatar>
-                <p className="text-sm">{active.display_name}</p>
+                <p className="min-w-0 flex-1 truncate text-sm">{active.display_name}</p>
+                <p className="text-xs opacity-70">
+                  {activeIdx + 1}/{activePack.length}
+                </p>
               </div>
               {active.kind === "video" && active.image_data ? (
-                <video src={active.image_data} autoPlay playsInline controls className={cn("mx-auto max-h-72 rounded-lg", filterClass(packed.filter))} />
+                <video
+                  key={active.id}
+                  src={active.image_data}
+                  autoPlay
+                  playsInline
+                  controls
+                  preload="auto"
+                  className={cn("mx-auto max-h-72 w-full rounded-lg bg-black", filterClass(packed.filter))}
+                  onEnded={() => goStory(1)}
+                />
               ) : active.image_data ? (
                 <img src={active.image_data} alt="" className={cn("mx-auto max-h-72 rounded-lg object-cover", filterClass(packed.filter))} />
               ) : (
                 <p className={cn("font-display text-3xl leading-snug", filterClass(packed.filter))}>{active.body}</p>
               )}
               {active.body && active.kind !== "text" ? <p className="text-sm">{active.body}</p> : null}
-              <div className="flex items-center gap-3">
+              <div className="mt-3 flex items-center gap-3">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={activeIdx === 0}
+                  onClick={() => goStory(-1)}
+                >
+                  <ChevronRight className="size-4" />
+                  السابق
+                </Button>
                 <Button
                   variant="secondary"
                   size="sm"
@@ -247,6 +293,15 @@ export function StoriesPage() {
                   <Eye className="size-3.5" />
                   {active.views}
                 </span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="ms-auto"
+                  onClick={() => goStory(1)}
+                >
+                  التالي
+                  <ChevronLeft className="size-4" />
+                </Button>
               </div>
             </div>
           ) : null}

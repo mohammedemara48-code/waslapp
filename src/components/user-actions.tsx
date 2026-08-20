@@ -20,7 +20,7 @@ export function UserActions({
   person,
   children,
 }: {
-  person: Pick<ProfileRow, "user_id" | "display_name" | "username" | "avatar_url" | "online" | "badge">;
+  person: Pick<ProfileRow, "user_id" | "display_name" | "username" | "avatar_url" | "online" | "badge" | "wasl_no">;
   children: React.ReactNode;
 }) {
   const navigate = useNavigate();
@@ -65,7 +65,9 @@ export function UserActions({
             <p className="truncate text-sm">
               {person.display_name} <NameBadge badge={person.badge} />
             </p>
-            <p className="truncate text-xs text-muted">@{person.username ?? "بدون"}</p>
+            <p className="truncate text-xs text-muted">
+              رقم {person.wasl_no ?? "—"} · @{person.username ?? "بدون"}
+            </p>
           </div>
         </div>
         <DropdownMenuSeparator />

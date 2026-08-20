@@ -31,7 +31,7 @@ export function NotificationBell() {
       seen.current = newest.id;
       return;
     }
-    if (newest.id > seen.current && document.hidden) {
+    if (newest.id > seen.current) {
       announceNotification({ title: newest.title, body: newest.body, href: newest.href });
     }
     seen.current = Math.max(seen.current, newest.id);

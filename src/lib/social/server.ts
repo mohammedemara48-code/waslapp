@@ -27,6 +27,7 @@ function mapProfile(row: {
   last_seen?: string | null;
   online?: boolean | number;
   badge?: string | null;
+  wasl_no?: number | null;
 }): ProfileRow {
   return {
     user_id: row.user_id,
@@ -39,6 +40,7 @@ function mapProfile(row: {
     last_seen: row.last_seen ?? null,
     online: Boolean(row.online),
     badge: row.badge ?? null,
+    wasl_no: row.wasl_no ?? null,
   };
 }
 
@@ -55,8 +57,9 @@ export const getMyProfile = createServerFn({ method: "GET" })
       bio: string | null;
       avatar_url: string | null;
       avatar_data: string | null;
+      wasl_no: number | null;
     }>`
-      select user_id, username, display_name, email, phone, bio, avatar_url, avatar_data
+      select user_id, username, display_name, email, phone, bio, avatar_url, avatar_data, wasl_no
       from profiles where user_id = ${context.userId} limit 1
     `;
     return rows[0] ? mapProfile(rows[0]) : null;
@@ -99,6 +102,7 @@ export const ensureProfile = createServerFn({ method: "POST" })
     if (!owners[0]) {
       await sql`update profiles set role = 'owner' where user_id = ${context.userId}`;
     }
+    await sql`update profiles set wasl_no = nextval('wasl_no_seq') where wasl_no is null`;
     return { ok: true as const };
   });
 
@@ -200,9 +204,10 @@ export const searchPeople = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .validator((q: string) => q.trim().slice(0, 40))
   .handler(async ({ context, data: q }) => {
-    if (q.length < 2) return [] as ProfileRow[];
+    if (q.length < 1) return [] as ProfileRow[];
     const sql = await getSql();
     const like = `%${q}%`;
+    const asNo = /^\d+$/.test(q) ? Number(q) : 0;
     const rows = await sql<{
       user_id: string;
       username: string | null;
@@ -212,13 +217,15 @@ export const searchPeople = createServerFn({ method: "GET" })
       bio: string | null;
       avatar_url: string | null;
       avatar_data: string | null;
+      wasl_no: number | null;
     }>`
-      select user_id, username, display_name, email, phone, bio, avatar_url, avatar_data
+      select user_id, username, display_name, email, phone, bio, avatar_url, avatar_data, wasl_no
       from profiles
       where user_id <> ${context.userId}
         and (
           username ilike ${like}
           or display_name ilike ${like}
+          or (${asNo} > 0 and wasl_no = ${asNo})
         )
         and not exists (
           select 1 from blocks b
@@ -326,13 +333,14 @@ export const listFriends = createServerFn({ method: "GET" })
       last_seen: string | null;
       online: boolean;
       badge: string | null;
+      wasl_no: number | null;
     }>`
       select
         f.id, f.status, f.created_at, f.requester_id, f.addressee_id,
         p.user_id, p.username, p.display_name, p.email, p.phone, p.bio, p.avatar_url, p.avatar_data,
         p.last_seen,
         (p.last_seen > now() - interval '45 seconds') as online,
-        p.badge
+        p.badge, p.wasl_no
       from friendships f
       join profiles p on p.user_id = case
         when f.requester_id = ${context.userId} then f.addressee_id

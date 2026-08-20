@@ -62,6 +62,9 @@ self.addEventListener("message", (event) => {
       data: { href: data.href || "/" },
       dir: "rtl",
       lang: "ar",
+      vibrate: [40, 30, 80],
+      tag: "wasl",
+      renotify: true,
     }),
   );
 });

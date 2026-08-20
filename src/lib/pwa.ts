@@ -18,6 +18,11 @@ export async function enableBrowserNotifications(): Promise<boolean> {
 export function announceNotification(input: { title: string; body: string; href?: string | null }) {
   if (typeof window === "undefined") return;
   const payload = { type: "notify", title: input.title, body: input.body, href: input.href ?? "/" };
+  try {
+    navigator.vibrate?.([40, 30, 40]);
+  } catch {
+    /* ignore */
+  }
   if (navigator.serviceWorker?.controller) {
     navigator.serviceWorker.controller.postMessage(payload);
     return;

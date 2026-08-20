@@ -34,7 +34,7 @@ export function MembersRail() {
                     {person.display_name} <NameBadge badge={person.badge} />
                   </span>
                   <span className="block truncate text-[11px] text-muted">
-                    @{person.username ?? "بدون"}
+                    رقم {person.wasl_no ?? "—"} · @{person.username ?? "بدون"}
                     {person.online ? " · متصل" : ""}
                   </span>
                 </span>
