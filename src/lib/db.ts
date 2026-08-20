@@ -233,6 +233,14 @@ async function createPgliteSql(): Promise<Sql> {
         user_id text not null,
         primary key (post_id, user_id)
       );
+      create table if not exists post_comments (
+        id serial primary key,
+        post_id int not null references posts(id) on delete cascade,
+        user_id text not null,
+        body text not null,
+        created_at timestamptz not null default now()
+      );
+      create index if not exists post_comments_post_idx on post_comments (post_id, id);
     `);
     await pg.exec(`
       create sequence if not exists wasl_no_seq start with 1001;

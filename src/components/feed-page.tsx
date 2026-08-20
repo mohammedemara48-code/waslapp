@@ -1,20 +1,17 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Heart, ImageIcon, Trash2, Video } from "lucide-react";
+import { ImageIcon, Video } from "lucide-react";
 import { toast } from "sonner";
-import { deletePost, likePost, listPosts, publishPost } from "@/lib/feed/server";
-import { useCurrentUser } from "@/lib/auth/use-current-user";
-import { compressImage, cn, fileToAttachment, formatDay, initials } from "@/lib/utils";
+import { listPosts, publishPost } from "@/lib/feed/server";
+import { compressImage, cn, fileToAttachment } from "@/lib/utils";
 import { AppShell } from "@/components/app-shell";
 import { MediaVideo } from "@/components/media-video";
+import { PostCard } from "@/components/post-card";
 import { StoriesRail } from "@/components/stories-rail";
-import { UserActions } from "@/components/user-actions";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 export function FeedPage() {
-  const me = useCurrentUser();
   const queryClient = useQueryClient();
   const feed = useQuery({ queryKey: ["posts"], queryFn: () => listPosts(), refetchInterval: 12000 });
   const [kind, setKind] = useState<"text" | "image" | "video" | "reel">("text");
@@ -127,73 +124,7 @@ export function FeedPage() {
 
         <div className="space-y-4">
           {posts.map((post) => (
-            <article key={post.id} className="rounded-xl border border-border bg-surface p-4">
-              <header className="mb-3 flex items-center gap-2">
-                <UserActions
-                  person={{
-                    user_id: post.user_id,
-                    display_name: post.display_name,
-                    username: post.username,
-                    avatar_url: post.avatar_url,
-                    wasl_no: post.wasl_no,
-                    online: false,
-                    badge: null,
-                  }}
-                >
-                  <button type="button" className="flex min-w-0 flex-1 items-center gap-2 text-right">
-                    <Avatar className="size-10">
-                      {post.avatar_url ? <AvatarImage src={post.avatar_url} alt="" /> : null}
-                      <AvatarFallback>{initials(post.display_name)}</AvatarFallback>
-                    </Avatar>
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm">{post.display_name}</span>
-                      <span className="block truncate text-[11px] text-muted">
-                        {post.kind === "reel" ? "ريل · " : ""}
-                        رقم {post.wasl_no ?? "—"} · {formatDay(post.created_at)}
-                      </span>
-                    </span>
-                  </button>
-                </UserActions>
-                {post.user_id === me?.id ? (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() =>
-                      void deletePost({ data: post.id })
-                        .then(() => {
-                          toast.success("حُذف المنشور");
-                          void queryClient.invalidateQueries({ queryKey: ["posts"] });
-                        })
-                        .catch((err) => toast.error(err instanceof Error ? err.message : "تعذر الحذف"))
-                    }
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                ) : null}
-              </header>
-              {post.body ? <p className="mb-3 whitespace-pre-wrap text-sm leading-relaxed">{post.body}</p> : null}
-              {post.kind === "image" && post.media_data ? (
-                <img src={post.media_data} alt="" className="max-h-96 w-full rounded-lg object-cover" />
-              ) : null}
-              {(post.kind === "video" || post.kind === "reel") && post.media_data ? (
-                <MediaVideo
-                  src={post.media_data}
-                  className={cn("w-full rounded-lg bg-elevated", post.kind === "reel" ? "max-h-[28rem]" : "max-h-72")}
-                />
-              ) : null}
-              <div className="mt-3">
-                <Button
-                  size="sm"
-                  variant={post.liked ? "default" : "secondary"}
-                  onClick={() =>
-                    void likePost({ data: post.id }).then(() => queryClient.invalidateQueries({ queryKey: ["posts"] }))
-                  }
-                >
-                  <Heart className="size-4" />
-                  {post.likes}
-                </Button>
-              </div>
-            </article>
+            <PostCard key={post.id} post={post} />
           ))}
         </div>
       </div>

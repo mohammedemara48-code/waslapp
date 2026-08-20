@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { getPublicProfile } from "@/lib/live/server";
+import { listUserPosts } from "@/lib/feed/server";
 import { initials } from "@/lib/utils";
 import { AppShell } from "@/components/app-shell";
+import { PostCard } from "@/components/post-card";
 import { UserActions } from "@/components/user-actions";
 import { NameBadge } from "@/components/name-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,6 +14,10 @@ export function PublicProfile({ userId }: { userId: string }) {
   const q = useQuery({
     queryKey: ["profile", userId],
     queryFn: () => getPublicProfile({ data: userId }),
+  });
+  const posts = useQuery({
+    queryKey: ["user-posts", userId],
+    queryFn: () => listUserPosts({ data: userId }),
   });
   if (q.isPending) {
     return (
@@ -60,6 +66,17 @@ export function PublicProfile({ userId }: { userId: string }) {
             <Button>خيارات</Button>
           </UserActions>
         )}
+
+        <section className="space-y-3">
+          <h2 className="font-display text-xl">المنشورات</h2>
+          {posts.isPending ? <Skeleton className="h-32 w-full" /> : null}
+          {!posts.isPending && (posts.data?.length ?? 0) === 0 ? (
+            <p className="text-sm text-muted">لا منشورات ظاهرة على هذا الحساب.</p>
+          ) : null}
+          {(posts.data ?? []).map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))}
+        </section>
       </div>
     </AppShell>
   );

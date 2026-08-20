@@ -2,10 +2,45 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
-import type { PostRow } from "@/lib/chat/types";
+import type { PostCommentRow, PostRow } from "@/lib/chat/types";
 
 function displayAvatar(row: { avatar_data?: string | null; avatar_url?: string | null }): string | null {
   return row.avatar_data || row.avatar_url || null;
+}
+
+function mapPost(r: {
+  id: number;
+  user_id: string;
+  kind: string;
+  body: string;
+  media_data: string | null;
+  visibility: string;
+  created_at: string;
+  display_name: string;
+  avatar_url: string | null;
+  avatar_data: string | null;
+  username: string | null;
+  wasl_no: number | null;
+  likes: number;
+  liked: number;
+  comments: number;
+}): PostRow {
+  return {
+    id: r.id,
+    user_id: r.user_id,
+    kind: r.kind,
+    body: r.body,
+    media_data: r.media_data,
+    visibility: r.visibility,
+    created_at: r.created_at,
+    display_name: r.display_name,
+    avatar_url: displayAvatar(r),
+    username: r.username,
+    wasl_no: r.wasl_no,
+    likes: r.likes,
+    liked: r.liked > 0,
+    comments: r.comments,
+  };
 }
 
 export const listPosts = createServerFn({ method: "GET" })
@@ -27,12 +62,14 @@ export const listPosts = createServerFn({ method: "GET" })
       wasl_no: number | null;
       likes: number;
       liked: number;
+      comments: number;
     }>`
       select
         p.id, p.user_id, p.kind, p.body, p.media_data, p.visibility, p.created_at,
         pr.display_name, pr.avatar_url, pr.avatar_data, pr.username, pr.wasl_no,
         (select count(*)::int from post_likes l where l.post_id = p.id) as likes,
-        (select count(*)::int from post_likes l where l.post_id = p.id and l.user_id = ${context.userId}) as liked
+        (select count(*)::int from post_likes l where l.post_id = p.id and l.user_id = ${context.userId}) as liked,
+        (select count(*)::int from post_comments c where c.post_id = p.id) as comments
       from posts p
       join profiles pr on pr.user_id = p.user_id
       where not exists (
@@ -58,23 +95,64 @@ export const listPosts = createServerFn({ method: "GET" })
       order by p.created_at desc
       limit 80
     `;
-    return rows.map(
-      (r): PostRow => ({
-        id: r.id,
-        user_id: r.user_id,
-        kind: r.kind,
-        body: r.body,
-        media_data: r.media_data,
-        visibility: r.visibility,
-        created_at: r.created_at,
-        display_name: r.display_name,
-        avatar_url: displayAvatar(r),
-        username: r.username,
-        wasl_no: r.wasl_no,
-        likes: r.likes,
-        liked: r.liked > 0,
-      }),
-    );
+    return rows.map(mapPost);
+  });
+
+export const listUserPosts = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .validator((userId: string) => z.string().min(1).max(80).parse(userId))
+  .handler(async ({ context, data: userId }) => {
+    const sql = await getSql();
+    const rows = await sql<{
+      id: number;
+      user_id: string;
+      kind: string;
+      body: string;
+      media_data: string | null;
+      visibility: string;
+      created_at: string;
+      display_name: string;
+      avatar_url: string | null;
+      avatar_data: string | null;
+      username: string | null;
+      wasl_no: number | null;
+      likes: number;
+      liked: number;
+      comments: number;
+    }>`
+      select
+        p.id, p.user_id, p.kind, p.body, p.media_data, p.visibility, p.created_at,
+        pr.display_name, pr.avatar_url, pr.avatar_data, pr.username, pr.wasl_no,
+        (select count(*)::int from post_likes l where l.post_id = p.id) as likes,
+        (select count(*)::int from post_likes l where l.post_id = p.id and l.user_id = ${context.userId}) as liked,
+        (select count(*)::int from post_comments c where c.post_id = p.id) as comments
+      from posts p
+      join profiles pr on pr.user_id = p.user_id
+      where p.user_id = ${userId}
+        and not exists (
+          select 1 from blocks b
+          where (b.blocker_id = ${context.userId} and b.blocked_id = p.user_id)
+             or (b.blocker_id = p.user_id and b.blocked_id = ${context.userId})
+        )
+        and (
+          p.user_id = ${context.userId}
+          or p.visibility = 'all'
+          or (
+            p.visibility = 'friends'
+            and exists (
+              select 1 from friendships f
+              where f.status = 'accepted'
+                and (
+                  (f.requester_id = ${context.userId} and f.addressee_id = p.user_id)
+                  or (f.requester_id = p.user_id and f.addressee_id = ${context.userId})
+                )
+            )
+          )
+        )
+      order by p.created_at desc
+      limit 80
+    `;
+    return rows.map(mapPost);
   });
 
 export const publishPost = createServerFn({ method: "POST" })
@@ -151,3 +229,86 @@ export const deletePost = createServerFn({ method: "POST" })
     if (!rows[0]) throw new Error("لا يمكن حذف هذا المنشور");
     return { ok: true as const };
   });
+
+export const listPostComments = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .validator((postId: number) => z.number().int().positive().parse(postId))
+  .handler(async ({ data: postId }) => {
+    const sql = await getSql();
+    const rows = await sql<{
+      id: number;
+      post_id: number;
+      user_id: string;
+      body: string;
+      created_at: string;
+      display_name: string;
+      avatar_url: string | null;
+      avatar_data: string | null;
+    }>`
+      select
+        c.id, c.post_id, c.user_id, c.body, c.created_at,
+        pr.display_name, pr.avatar_url, pr.avatar_data
+      from post_comments c
+      join profiles pr on pr.user_id = c.user_id
+      where c.post_id = ${postId}
+      order by c.id
+      limit 80
+    `;
+    return rows.map(
+      (r): PostCommentRow => ({
+        id: r.id,
+        post_id: r.post_id,
+        user_id: r.user_id,
+        body: r.body,
+        created_at: r.created_at,
+        display_name: r.display_name,
+        avatar_url: displayAvatar(r),
+      }),
+    );
+  });
+
+export const addPostComment = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { postId: number; body: string }) => {
+    const postId = z.number().int().positive().parse(input.postId);
+    const body = input.body.trim().slice(0, 280);
+    if (body.length < 1) throw new Error("اكتب تعليقاً");
+    return { postId, body };
+  })
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    await sql`
+      insert into post_comments (post_id, user_id, body)
+      values (${data.postId}, ${context.userId}, ${data.body})
+    `;
+    const post = await sql<{ user_id: string }>`select user_id from posts where id = ${data.postId} limit 1`;
+    if (post[0] && post[0].user_id !== context.userId) {
+      const me = await sql<{ display_name: string }>`
+        select display_name from profiles where user_id = ${context.userId} limit 1
+      `;
+      await sql`
+        insert into notifications (user_id, kind, title, body, href)
+        values (
+          ${post[0].user_id},
+          'comment',
+          ${`${me[0]?.display_name ?? "عضو"} علّق على منشورك`},
+          ${data.body},
+          '/'
+        )
+      `;
+    }
+    return { ok: true as const };
+  });
+
+export const deletePostComment = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((id: number) => z.number().int().positive().parse(id))
+  .handler(async ({ context, data: id }) => {
+    const sql = await getSql();
+    const rows = await sql<{ id: number }>`
+      delete from post_comments where id = ${id} and user_id = ${context.userId} returning id
+    `;
+    if (!rows[0]) throw new Error("لا يمكن حذف التعليق");
+    return { ok: true as const };
+  });
+

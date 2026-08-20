@@ -92,4 +92,15 @@ export type PostRow = {
   wasl_no: number | null;
   likes: number;
   liked: boolean;
+  comments?: number;
+};
+
+export type PostCommentRow = {
+  id: number;
+  post_id: number;
+  user_id: string;
+  body: string;
+  created_at: string;
+  display_name: string;
+  avatar_url: string | null;
 };
