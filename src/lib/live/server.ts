@@ -265,13 +265,15 @@ export const listStories = createServerFn({ method: "GET" })
       likes: number;
       liked: number;
       views: number;
+      visibility: string | null;
     }>`
       select
         s.id, s.user_id, s.kind, s.body, s.image_data, s.tint, s.created_at,
         p.display_name, p.avatar_url, p.avatar_data, p.username,
         (select count(*)::int from story_likes l where l.story_id = s.id) as likes,
         (select count(*)::int from story_likes l where l.story_id = s.id and l.user_id = ${context.userId}) as liked,
-        (select count(*)::int from story_views v where v.story_id = s.id) as views
+        (select count(*)::int from story_views v where v.story_id = s.id) as views,
+        coalesce(s.visibility, 'friends') as visibility
       from stories s
       join profiles p on p.user_id = s.user_id
       where s.created_at > now() - interval '24 hours'
@@ -282,13 +284,17 @@ export const listStories = createServerFn({ method: "GET" })
         )
         and (
           s.user_id = ${context.userId}
-          or exists (
-            select 1 from friendships f
-            where f.status = 'accepted'
-              and (
-                (f.requester_id = ${context.userId} and f.addressee_id = s.user_id)
-                or (f.requester_id = s.user_id and f.addressee_id = ${context.userId})
-              )
+          or coalesce(s.visibility, 'friends') = 'all'
+          or (
+            coalesce(s.visibility, 'friends') = 'friends'
+            and exists (
+              select 1 from friendships f
+              where f.status = 'accepted'
+                and (
+                  (f.requester_id = ${context.userId} and f.addressee_id = s.user_id)
+                  or (f.requester_id = s.user_id and f.addressee_id = ${context.userId})
+                )
+            )
           )
         )
       order by s.created_at desc
@@ -309,41 +315,63 @@ export const listStories = createServerFn({ method: "GET" })
         likes: r.likes,
         liked: r.liked > 0,
         views: r.views,
+        visibility: r.visibility,
       }),
     );
   });
 
 export const publishStory = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .validator((input: { kind: "text" | "image" | "video"; body?: string; imageData?: string | null; tint?: string }) => {
+  .validator((input: {
+    kind: "text" | "image" | "video";
+    body?: string;
+    imageData?: string | null;
+    tint?: string;
+    visibility?: "all" | "friends" | "me";
+  }) => {
     const kind = input.kind;
     const body = (input.body ?? "").trim().slice(0, 140);
     const imageData = input.imageData ?? null;
     const tint = (input.tint ?? "ink").slice(0, 80);
+    const visibility = input.visibility === "all" || input.visibility === "me" ? input.visibility : "friends";
     if (kind === "text" && !body) throw new Error("اكتب سطراً للقصة");
     if (kind === "image" && !imageData) throw new Error("اختر صورة");
     if (kind === "video" && !imageData) throw new Error("اختر مقطعاً");
     if (imageData && imageData.length > 4_000_000) throw new Error("الملف كبير");
-    return { kind, body, imageData, tint };
+    return { kind, body, imageData, tint, visibility };
   })
   .handler(async ({ context, data }) => {
     const sql = await getSql();
     await sql`
-      insert into stories (user_id, kind, body, image_data, tint)
-      values (${context.userId}, ${data.kind}, ${data.body}, ${data.imageData}, ${data.tint})
+      insert into stories (user_id, kind, body, image_data, tint, visibility)
+      values (${context.userId}, ${data.kind}, ${data.body}, ${data.imageData}, ${data.tint}, ${data.visibility})
     `;
-    const friends = await sql<{ user_id: string }>`
-      select case when requester_id = ${context.userId} then addressee_id else requester_id end as user_id
-      from friendships
-      where status = 'accepted'
-        and (requester_id = ${context.userId} or addressee_id = ${context.userId})
-    `;
-    const me = await sql<{ display_name: string }>`
-      select display_name from profiles where user_id = ${context.userId} limit 1
-    `;
-    for (const f of friends) {
-      await notify(sql, f.user_id, "story", `قصة جديدة من ${me[0]?.display_name ?? "صديقك"}`, "شاهدها قبل أن تختفي.", "/stories");
+    if (data.visibility !== "me") {
+      const friends = await sql<{ user_id: string }>`
+        select case when requester_id = ${context.userId} then addressee_id else requester_id end as user_id
+        from friendships
+        where status = 'accepted'
+          and (requester_id = ${context.userId} or addressee_id = ${context.userId})
+      `;
+      const me = await sql<{ display_name: string }>`
+        select display_name from profiles where user_id = ${context.userId} limit 1
+      `;
+      for (const f of friends) {
+        await notify(sql, f.user_id, "story", `قصة جديدة من ${me[0]?.display_name ?? "صديقك"}`, "شاهدها قبل أن تختفي.", "/stories");
+      }
     }
+    return { ok: true as const };
+  });
+
+export const deleteStory = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((id: number) => z.number().int().positive().parse(id))
+  .handler(async ({ context, data: id }) => {
+    const sql = await getSql();
+    const rows = await sql<{ id: number }>`
+      delete from stories where id = ${id} and user_id = ${context.userId} returning id
+    `;
+    if (!rows[0]) throw new Error("لا يمكن حذف هذه القصة");
     return { ok: true as const };
   });
 

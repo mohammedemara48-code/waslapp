@@ -75,4 +75,5 @@ export type StoryRow = {
   likes: number;
   liked: boolean;
   views: number;
+  visibility?: string | null;
 };

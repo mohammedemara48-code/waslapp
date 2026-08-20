@@ -202,6 +202,7 @@ async function createPgliteSql(): Promise<Sql> {
         tint text not null default 'ink',
         created_at timestamptz not null default now()
       );
+      alter table if exists stories add column if not exists visibility text;
       create index if not exists stories_user_created_idx on stories (user_id, created_at desc);
       create table if not exists story_likes (
         story_id int not null references stories(id) on delete cascade,

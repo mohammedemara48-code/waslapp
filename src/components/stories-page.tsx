@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Eye, Heart, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Heart, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { likeStory, listStories, publishStory, viewStory } from "@/lib/live/server";
+import { likeStory, listStories, publishStory, viewStory, deleteStory } from "@/lib/live/server";
+import { useCurrentUser } from "@/lib/auth/use-current-user";
 import { compressImage, cn, fileToAttachment, initials } from "@/lib/utils";
 import {
   STORY_FILTERS,
@@ -37,6 +38,7 @@ function tintClass(tint: string) {
 }
 
 export function StoriesPage() {
+  const me = useCurrentUser();
   const queryClient = useQueryClient();
   const feed = useQuery({ queryKey: ["stories"], queryFn: () => listStories(), refetchInterval: 10000 });
   const [compose, setCompose] = useState(false);
@@ -45,6 +47,7 @@ export function StoriesPage() {
   const [tint, setTint] = useState("ink");
   const [fx, setFx] = useState("none");
   const [track, setTrack] = useState("off");
+  const [audience, setAudience] = useState<"all" | "friends" | "me">("friends");
   const [image, setImage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [activePack, setActivePack] = useState<StoryRow[]>([]);
@@ -72,7 +75,7 @@ export function StoriesPage() {
     setBusy(true);
     try {
       await publishStory({
-        data: { kind, body, imageData: image, tint: packStoryStyle(tint, fx, track) },
+        data: { kind, body, imageData: image, tint: packStoryStyle(tint, fx, track), visibility: audience },
       });
       toast.success("نُشرت القصة");
       setCompose(false);
@@ -92,6 +95,28 @@ export function StoriesPage() {
     const story = pack[index];
     if (story) await viewStory({ data: story.id }).catch(() => {});
     void queryClient.invalidateQueries({ queryKey: ["stories"] });
+  }
+
+  async function removeStory() {
+    if (!active) return;
+    setBusy(true);
+    try {
+      await deleteStory({ data: active.id });
+      toast.success("حُذفت القصة");
+      const nextPack = activePack.filter((s) => s.id !== active.id);
+      if (nextPack.length === 0) {
+        setActivePack([]);
+        setActiveIdx(0);
+      } else {
+        setActivePack(nextPack);
+        setActiveIdx(Math.min(activeIdx, nextPack.length - 1));
+      }
+      void queryClient.invalidateQueries({ queryKey: ["stories"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "تعذر الحذف");
+    } finally {
+      setBusy(false);
+    }
   }
 
   function goStory(delta: number) {
@@ -214,6 +239,20 @@ export function StoriesPage() {
               </Button>
             ))}
           </div>
+          <p className="text-xs text-subtle">من يرى القصة</p>
+          <div className="flex flex-wrap gap-1">
+            {(
+              [
+                ["friends", "الأصدقاء"],
+                ["all", "كل الأعضاء"],
+                ["me", "أنا فقط"],
+              ] as const
+            ).map(([id, label]) => (
+              <Button key={id} size="sm" variant={audience === id ? "default" : "secondary"} onClick={() => setAudience(id)}>
+                {label}
+              </Button>
+            ))}
+          </div>
           <Button onClick={() => void publish()} disabled={busy}>
             {busy ? "جارٍ النشر…" : "نشر"}
           </Button>
@@ -252,6 +291,12 @@ export function StoriesPage() {
                 <p className="text-xs opacity-70">
                   {activeIdx + 1}/{activePack.length}
                 </p>
+                {active.user_id === me?.id ? (
+                  <Button size="sm" variant="ghost" disabled={busy} onClick={() => void removeStory()}>
+                    <Trash2 className="size-4" />
+                    حذف
+                  </Button>
+                ) : null}
               </div>
               {active.kind === "video" && active.image_data ? (
                 <MediaVideo
