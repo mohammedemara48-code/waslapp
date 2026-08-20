@@ -7,6 +7,10 @@ export const STICKERS = [
   { id: "light", label: "ضوء" },
   { id: "key", label: "مفتاح" },
   { id: "gift", label: "هدية" },
+  { id: "heart", label: "قلب" },
+  { id: "fire", label: "حماس" },
+  { id: "moon", label: "قمر" },
+  { id: "wave", label: "تحية" },
 ] as const;
 
 export type StickerId = (typeof STICKERS)[number]["id"];

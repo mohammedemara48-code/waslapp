@@ -604,10 +604,10 @@ export function RoomView({ slug }: { slug: string }) {
                             >
                               {msg.body && msg.attachment_type !== "call-event" ? <p>{msg.body}</p> : null}
                               {msg.attachment_type === "sticker" ? (
-                                <p className="mt-2 flex items-center gap-2 font-display text-xl">
-                                  <StickerMark id={msg.attachment_name ?? "gift"} className="size-6" />
-                                  {msg.attachment_data || msg.body}
-                                </p>
+                                <div className="mt-1 flex flex-col items-start gap-1">
+                                  <StickerMark id={msg.attachment_name ?? "gift"} className="size-16" />
+                                  <span className="text-xs opacity-80">{msg.attachment_data || msg.body}</span>
+                                </div>
                               ) : (
                                 <MessageMedia msg={msg} mine={mine} />
                               )}
@@ -661,15 +661,58 @@ export function RoomView({ slug }: { slug: string }) {
             >
               <div className="mx-auto flex max-w-3xl flex-col gap-2">
                 {attachment ? (
-                  <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-elevated px-3 py-2 text-xs">
-                    <span className="truncate">{attachment.name}</span>
-                    <label className="flex shrink-0 items-center gap-1 text-[11px] text-muted">
-                      <input type="checkbox" checked={viewOnce} onChange={(e) => setViewOnce(e.target.checked)} />
-                      مرة واحدة
-                    </label>
-                    <button type="button" onClick={() => setAttachment(null)} aria-label="إزالة المرفق">
-                      <X className="size-3.5" />
-                    </button>
+                  <div className="space-y-2 rounded-xl border border-border bg-elevated p-3">
+                    <div className="flex items-center gap-3">
+                      {attachment.type.startsWith("image/") ? (
+                        <img src={attachment.data} alt="" className="size-14 rounded-lg object-cover" />
+                      ) : attachment.type.startsWith("video/") ? (
+                        <video src={attachment.data} className="size-14 rounded-lg object-cover" muted />
+                      ) : attachment.type.startsWith("audio/") ? (
+                        <span className="grid size-14 place-items-center rounded-lg bg-accent/20 text-accent">
+                          <Mic className="size-5" />
+                        </span>
+                      ) : (
+                        <Paperclip className="size-5 text-muted" />
+                      )}
+                      <span className="min-w-0 flex-1 truncate text-sm">{attachment.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAttachment(null);
+                          setViewOnce(false);
+                        }}
+                        aria-label="إزالة المرفق"
+                        className="grid size-8 place-items-center rounded-full text-muted hover:bg-surface hover:text-fg"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+                    {attachment.type.startsWith("image/") ||
+                    attachment.type.startsWith("video/") ||
+                    attachment.type.startsWith("audio/") ? (
+                      <div className="grid grid-cols-2 gap-1 rounded-lg bg-bg p-1">
+                        <button
+                          type="button"
+                          className={cn(
+                            "min-h-10 rounded-md text-sm",
+                            !viewOnce ? "bg-surface text-fg shadow-sm" : "text-muted",
+                          )}
+                          onClick={() => setViewOnce(false)}
+                        >
+                          {t.send_normal}
+                        </button>
+                        <button
+                          type="button"
+                          className={cn(
+                            "min-h-10 rounded-md text-sm",
+                            viewOnce ? "bg-accent text-accent-fg" : "text-muted",
+                          )}
+                          onClick={() => setViewOnce(true)}
+                        >
+                          {t.view_once}
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
                 {giftsOpen ? (
@@ -698,11 +741,11 @@ export function RoomView({ slug }: { slug: string }) {
                     }}
                   />
                 ) : null}
-                <div className="flex items-end gap-2">
-                <Button type="button" variant="secondary" size="icon" onClick={() => setGiftsOpen((v) => !v)} aria-label="هدايا">
+                <div className="flex items-end gap-1.5">
+                <Button type="button" variant={giftsOpen ? "default" : "secondary"} size="icon" className="rounded-full" onClick={() => setGiftsOpen((v) => !v)} aria-label="هدايا">
                   <Gift />
                 </Button>
-                <label className="grid size-11 shrink-0 place-items-center rounded-md border border-border bg-elevated text-muted hover:text-fg">
+                <label className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-elevated text-muted hover:text-fg">
                   <ImagePlus className="size-4" />
                   <span className="sr-only">صورة</span>
                   <input type="file" accept="image/*" className="sr-only"
@@ -711,12 +754,15 @@ export function RoomView({ slug }: { slug: string }) {
                       e.target.value = "";
                       if (!file) return;
                       void fileToAttachment(file)
-                        .then(setAttachment)
+                        .then((att) => {
+                          setAttachment(att);
+                          setViewOnce(false);
+                        })
                         .catch((err) => toast.error(err instanceof Error ? err.message : "تعذر الإرفاق"));
                     }}
                   />
                 </label>
-                <label className="grid size-11 shrink-0 place-items-center rounded-md border border-border bg-elevated text-muted hover:text-fg">
+                <label className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-elevated text-muted hover:text-fg">
                   <Video className="size-4" />
                   <span className="sr-only">فيديو</span>
                   <input type="file" accept="video/*" className="sr-only"
@@ -725,12 +771,15 @@ export function RoomView({ slug }: { slug: string }) {
                       e.target.value = "";
                       if (!file) return;
                       void fileToAttachment(file)
-                        .then(setAttachment)
+                        .then((att) => {
+                          setAttachment(att);
+                          setViewOnce(false);
+                        })
                         .catch((err) => toast.error(err instanceof Error ? err.message : "تعذر الإرفاق"));
                     }}
                   />
                 </label>
-                <label className="grid size-11 shrink-0 place-items-center rounded-md border border-border bg-elevated text-muted hover:text-fg">
+                <label className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-elevated text-muted hover:text-fg">
                   <Paperclip className="size-4" />
                   <span className="sr-only">ملف</span>
                   <input type="file" className="sr-only"
@@ -739,7 +788,10 @@ export function RoomView({ slug }: { slug: string }) {
                       e.target.value = "";
                       if (!file) return;
                       void fileToAttachment(file)
-                        .then(setAttachment)
+                        .then((att) => {
+                          setAttachment(att);
+                          setViewOnce(false);
+                        })
                         .catch((err) => toast.error(err instanceof Error ? err.message : "تعذر الإرفاق"));
                     }}
                   />
@@ -748,6 +800,7 @@ export function RoomView({ slug }: { slug: string }) {
                   disabled={sending}
                   onReady={(file) => {
                     setAttachment(file);
+                    setViewOnce(false);
                   }}
                 />
                 <Textarea
@@ -755,7 +808,7 @@ export function RoomView({ slug }: { slug: string }) {
                   onChange={(e) => onDraft(e.target.value)}
                   placeholder={room?.kind === "dm" ? t.private_message : t.write_message}
                   rows={1}
-                  className="max-h-32 min-h-11"
+                  className="max-h-32 min-h-11 rounded-full px-4"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
@@ -763,7 +816,7 @@ export function RoomView({ slug }: { slug: string }) {
                     }
                   }}
                 />
-                <Button type="submit" size="icon" disabled={sending || (!draft.trim() && !attachment)} aria-label="إرسال">
+                <Button type="submit" size="icon" className="rounded-full" disabled={sending || (!draft.trim() && !attachment)} aria-label="إرسال">
                   <Send />
                 </Button>
                 </div>

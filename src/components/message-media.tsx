@@ -3,6 +3,7 @@ import { Eye, PhoneMissed, PhoneOff } from "lucide-react";
 import { toast } from "sonner";
 import { consumeViewOnce } from "@/lib/chat/server";
 import { MediaVideo } from "@/components/media-video";
+import { VoicePlayer } from "@/components/voice-player";
 import { Button } from "@/components/ui/button";
 import type { MessageRow } from "@/lib/chat/types";
 
@@ -60,7 +61,7 @@ export function MessageMedia({
     return <MediaVideo src={data} className="mt-2 max-h-56 w-full rounded-md" />;
   }
   if (mime.startsWith("audio/")) {
-    return <audio src={data} controls className="mt-2 w-full max-w-xs" />;
+    return <VoicePlayer src={data} accent={mine} />;
   }
   return (
     <a href={data} download={msg.attachment_name ?? "file"} className="mt-2 block text-xs underline underline-offset-4">
@@ -114,7 +115,7 @@ function ViewOnceMedia({
             ) : mime.startsWith("video/") ? (
               <MediaVideo src={msg.attachment_data} className="max-h-[80dvh] w-full rounded-xl" />
             ) : mime.startsWith("audio/") ? (
-              <audio src={msg.attachment_data} controls autoPlay className="w-full" />
+              <VoicePlayer src={msg.attachment_data} />
             ) : null}
             <Button className="mt-3 w-full" variant="secondary" onClick={() => void close()}>
               إغلاق وإنهاء الصلاحية

@@ -83,7 +83,7 @@ export function AppShell({
                 )}
               >
                 <span className="relative">
-                  <Icon className="size-4 text-accent" />
+                  <Icon className={cn("size-5", on && "fill-accent/30")} strokeWidth={on ? 2.4 : 1.7} />
                   {item.key === "messages" ? <CountDot n={dms} /> : null}
                 </span>
                 {item.label}
@@ -118,12 +118,12 @@ export function AppShell({
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  "relative flex min-h-12 flex-col items-center justify-center gap-0.5 text-xs",
+                  "relative flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px]",
                   on ? "text-accent" : "text-muted",
                 )}
               >
-                <span className="relative">
-                  <Icon className="size-4" />
+                <span className={cn("relative grid size-8 place-items-center rounded-full", on && "bg-accent/15")}>
+                  <Icon className={cn("size-5", on && "fill-accent/40")} strokeWidth={on ? 2.4 : 1.7} />
                   {item.key === "messages" ? <CountDot n={dms} /> : null}
                 </span>
                 {item.label}
