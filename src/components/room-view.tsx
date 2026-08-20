@@ -4,7 +4,8 @@ import { Link } from "@tanstack/react-router";
 import { Hash, Gift, ImagePlus, Menu, Mic, Paperclip, Pin, Search, Send, Star, Users, Video, X, Gamepad2, Tv } from "lucide-react";
 import { toast } from "sonner";
 import { getRoom, joinRoom, listMessages, listRooms, sendCallEvent, sendMessage } from "@/lib/chat/server";
-import { notifyPeers } from "@/lib/social/server";
+import { inviteToCall, listFriends, notifyPeers } from "@/lib/social/server";
+import { takeStashedCall } from "@/lib/i18n/notices";
 import { notifyRoomPresence, sendSticker } from "@/lib/live/server";
 import { markRoomRead, pinRoomMessage, toggleMicQueue, listMicQueue, toggleSaveMessage } from "@/lib/engage/server";
 import { StickerMark, StickerPicker } from "@/components/sticker-picker";
@@ -20,6 +21,7 @@ import { WaslMenu } from "@/components/wasl-menu";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useI18n } from "@/lib/i18n";
 import { CallStage } from "@/components/call-stage";
+import { CallInviteBar } from "@/components/call-invite-bar";
 import { MessageMedia } from "@/components/message-media";
 import { VoiceNoteButton } from "@/components/voice-note-button";
 import { startCallTone, stopCallTone } from "@/lib/call-tone";
@@ -133,6 +135,8 @@ export function RoomView({ slug }: { slug: string }) {
     stream: localStream,
   });
 
+  const pendingApplied = useRef(false);
+
   useEffect(() => {
     return p2p.onMessage((_from, data) => {
       if (!data || typeof data !== "object") return;
@@ -199,7 +203,7 @@ export function RoomView({ slug }: { slug: string }) {
   async function startCall(kind: "audio" | "video") {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         video: kind === "video",
       });
       setLocalStream(stream);
@@ -219,6 +223,25 @@ export function RoomView({ slug }: { slug: string }) {
       toast.error("تعذر الوصول إلى الميكروفون أو الكاميرا. تحقق من الإذن ثم أعد المحاولة.");
     }
   }
+
+  useEffect(() => {
+    if (pendingApplied.current) return;
+    let pending = takeStashedCall(slug);
+    if (!pending && typeof window !== "undefined") {
+      const q = new URLSearchParams(window.location.search);
+      const call = q.get("call");
+      if (call === "audio" || call === "video") {
+        pending = { kind: call, answer: q.get("answer") === "1", ring: q.get("ring") === "1" };
+      }
+    }
+    if (!pending) return;
+    pendingApplied.current = true;
+    if (pending.answer || pending.ring) void startCall(pending.kind);
+    else {
+      setIncoming({ kind: pending.kind, name: "" });
+      startCallTone("in");
+    }
+  }, [slug]);
 
   function hangup(status?: "no-answer" | "ended" | "rejected") {
     const kind = callKind;
@@ -522,6 +545,7 @@ export function RoomView({ slug }: { slug: string }) {
                   onToggleCamera={() => void toggleCamera()}
                   onHangup={hangup}
                 />
+                <CallInviteBar slug={slug} kind={callKind} />
               </div>
             ) : null}
 
@@ -729,7 +753,7 @@ export function RoomView({ slug }: { slug: string }) {
                 <Textarea
                   value={draft}
                   onChange={(e) => onDraft(e.target.value)}
-                  placeholder={room?.kind === "dm" ? "رسالة خاصة…" : "اكتب رسالة…"}
+                  placeholder={room?.kind === "dm" ? t.private_message : t.write_message}
                   rows={1}
                   className="max-h-32 min-h-11"
                   onKeyDown={(e) => {

@@ -2,6 +2,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { Ban, Flag, MessageCircle, Mic, UserPlus, UserRound, Video, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { sendFriendRequest, openDirect } from "@/lib/social/server";
+import { stashCall } from "@/lib/i18n/notices";
+import { useI18n } from "@/lib/i18n";
 import { blockUser } from "@/lib/live/server";
 import { muteUser, reportUser } from "@/lib/engage/server";
 import type { ProfileRow } from "@/lib/chat/types";
@@ -25,13 +27,24 @@ export function UserActions({
   children: React.ReactNode;
 }) {
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   async function add() {
     try {
       await sendFriendRequest({ data: person.user_id });
-      toast.success("أُرسل طلب الصداقة");
+      toast.success(t.add_friend);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "تعذر الإضافة");
+    }
+  }
+
+  async function startVoice(kind: "audio" | "video") {
+    try {
+      const { slug } = await openDirect({ data: person.user_id });
+      stashCall({ slug, kind, ring: true });
+      await navigate({ to: "/r/$slug", params: { slug } });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t.dm);
     }
   }
 
@@ -40,7 +53,7 @@ export function UserActions({
       const { slug } = await openDirect({ data: person.user_id });
       await navigate({ to: "/r/$slug", params: { slug } });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "أضف الصديق أولاً");
+      toast.error(err instanceof Error ? err.message : t.dm);
     }
   }
 
@@ -92,36 +105,36 @@ export function UserActions({
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => void navigate({ to: "/u/$userId", params: { userId: person.user_id } })}>
           <UserRound className="size-4" />
-          عرض الملف
+          {t.view_profile}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => void add()}>
           <UserPlus className="size-4" />
-          إضافة صديق
+          {t.add_friend}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => void chat()}>
           <MessageCircle className="size-4" />
-          رسالة خاصة
+          {t.dm}
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => void chat()}>
+        <DropdownMenuItem onSelect={() => void startVoice("audio")}>
           <Mic className="size-4" />
-          اتصال صوتي
+          {t.call_audio}
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => void chat()}>
+        <DropdownMenuItem onSelect={() => void startVoice("video")}>
           <Video className="size-4" />
-          اتصال فيديو
+          {t.call_video}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => void mute()}>
           <VolumeX className="size-4" />
-          كتم التنبيهات
+          {t.mute_alerts}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => void report()}>
           <Flag className="size-4" />
-          إبلاغ
+          {t.report}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => void block()}>
           <Ban className="size-4" />
-          حظر
+          {t.block}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -1,57 +1,6 @@
 export type Locale = "ar" | "en" | "ur";
 
-export type Dict = {
-  brand: string;
-  nav_home: string;
-  nav_rooms: string;
-  nav_messages: string;
-  nav_stories: string;
-  nav_friends: string;
-  nav_me: string;
-  nav_games: string;
-  nav_broadcast: string;
-  nav_admin: string;
-  language: string;
-  profile: string;
-  logout: string;
-  account: string;
-  landing_kicker: string;
-  landing_title: string;
-  landing_sub: string;
-  login_google: string;
-  login_phone: string;
-  signup: string;
-  signin: string;
-  phone: string;
-  password: string;
-  username: string;
-  nickname: string;
-  saved_accounts: string;
-  enter_password: string;
-  error_login: string;
-  google_tab: string;
-  start_here: string;
-  google_fast: string;
-  opening: string;
-  new_account: string;
-  create_account: string;
-  saving: string;
-  feed_title: string;
-  rooms_title: string;
-  messages_title: string;
-  stories_title: string;
-  friends_title: string;
-  me_title: string;
-  games_title: string;
-  broadcast_title: string;
-  tools_points: string;
-  tv: string;
-  radio: string;
-  search: string;
-  call_audio: string;
-  call_video: string;
-  shortcuts: string;
-};
+export type Dict = Record<string, string>;
 
 export const LOCALES: { id: Locale; label: string; dir: "rtl" | "ltr" }[] = [
   { id: "ar", label: "العربية", dir: "rtl" },
@@ -111,6 +60,87 @@ export const dictionaries: Record<Locale, Dict> = {
     call_audio: "صوت",
     call_video: "فيديو",
     shortcuts: "اختصارات وصل",
+    notifications: "الإشعارات",
+    alerts: "التنبيهات",
+    mark_read: "تعليم كمقروء",
+    no_alerts: "لا تنبيهات بعد",
+    enable_push: "تفعيل تنبيهات الجهاز",
+    accept: "قبول",
+    reject: "رفض",
+    add: "إضافة",
+    options: "خيارات",
+    you: "أنت",
+    online: "متصل",
+    offline: "غير متصل",
+    wasl_no: "رقم",
+    view_profile: "عرض الملف",
+    add_friend: "إضافة صديق",
+    dm: "رسالة خاصة",
+    mute_alerts: "كتم التنبيهات",
+    report: "إبلاغ",
+    block: "حظر",
+    feed_kicker: "منشورات وريلز الأعضاء",
+    games_tv: "ألعاب وتلفاز",
+    text: "نص",
+    image: "صورة",
+    video: "فيديو",
+    reel: "ريل",
+    share_ph: "ماذا تريد أن تشارك؟",
+    reel_ph: "وصف الريل…",
+    pick_file: "اختر صورة أو فيديو",
+    file_picked: "تم اختيار الملف — اضغط لتغييره",
+    all_members: "كل الأعضاء",
+    friends_only: "الأصدقاء فقط",
+    publish: "نشر",
+    members_kicker: "كل من سجّل في وصل",
+    members_title: "المشتركون",
+    search_people: "اسم أو رقم وصل مثل 1001",
+    search_results: "نتائج البحث",
+    no_match: "لا أحد بهذا الاسم.",
+    incoming_requests: "طلبات واردة",
+    all_registered: "كل المشتركين",
+    loading: "جارٍ التحميل…",
+    no_members: "لا مشتركون ظاهرون بعد.",
+    lobby_kicker: "أهلاً بك في وصل",
+    lobby_title: "جسر هادئ بين الناس",
+    lobby_sub: "اضغط اسماً لإضافة صديق أو محادثة أو اتصال. أرسل هدية داخل الغرفة، وانشر قصة تختفي بعد يوم.",
+    online_now: "متواجدون الآن",
+    nobody_online: "لا أحد ظاهر حالياً.",
+    me_kicker: "ملفك الظاهر للأصدقاء",
+    wasl_share: "شاركه ليضيفك الأصدقاء",
+    points_label: "النقاط",
+    avatar_label: "صورة الواجهة",
+    contact_phone: "رقم للتواصل",
+    bio: "نبذة",
+    facebook: "رابط فيسبوك",
+    save: "حفظ",
+    saved: "حُفظ الملف",
+    stories_kicker: "قصص تختفي بعد يوم",
+    add_story: "أضف قصة",
+    install: "تثبيت",
+    install_app: "تثبيت التطبيق",
+    install_title: "ثبّت وصل على جهازك",
+    incoming_call: "مكالمة واردة",
+    invite_to_call: "دعوة للمكالمة",
+    invite: "دعوة",
+    invited: "أُرسلت الدعوة",
+    ringing: "يرن… بانتظار الرد",
+    in_call: "في المكالمة",
+    hangup: "إنهاء",
+    you_label: "أنت",
+    write_message: "اكتب رسالة…",
+    private_message: "رسالة خاصة…",
+    view_once: "مرة واحدة",
+    comment: "تعليق",
+    like: "إعجاب",
+    connected: "متصل",
+    notice_call: "مكالمة",
+    notice_friend: "طلب صداقة",
+    notice_friend_ok: "قُبلت الصداقة",
+    notice_message: "رسالة جديدة",
+    notice_story: "قصة جديدة",
+    notice_gift: "هدية",
+    notice_presence: "صديق متصل",
   },
   en: {
     brand: "Wasl",
@@ -163,6 +193,87 @@ export const dictionaries: Record<Locale, Dict> = {
     call_audio: "Audio",
     call_video: "Video",
     shortcuts: "Wasl shortcuts",
+    notifications: "Notifications",
+    alerts: "Alerts",
+    mark_read: "Mark as read",
+    no_alerts: "No alerts yet",
+    enable_push: "Enable device alerts",
+    accept: "Accept",
+    reject: "Decline",
+    add: "Add",
+    options: "Options",
+    you: "You",
+    online: "Online",
+    offline: "Offline",
+    wasl_no: "No.",
+    view_profile: "View profile",
+    add_friend: "Add friend",
+    dm: "Private message",
+    mute_alerts: "Mute alerts",
+    report: "Report",
+    block: "Block",
+    feed_kicker: "Posts and reels from members",
+    games_tv: "Games & TV",
+    text: "Text",
+    image: "Photo",
+    video: "Video",
+    reel: "Reel",
+    share_ph: "What would you like to share?",
+    reel_ph: "Reel caption…",
+    pick_file: "Choose a photo or video",
+    file_picked: "File selected — tap to change",
+    all_members: "Everyone",
+    friends_only: "Friends only",
+    publish: "Publish",
+    members_kicker: "Everyone registered on Wasl",
+    members_title: "Members",
+    search_people: "Name or Wasl number like 1001",
+    search_results: "Search results",
+    no_match: "No one with that name.",
+    incoming_requests: "Incoming requests",
+    all_registered: "All members",
+    loading: "Loading…",
+    no_members: "No members yet.",
+    lobby_kicker: "Welcome to Wasl",
+    lobby_title: "A quiet bridge between people",
+    lobby_sub: "Tap a name to add a friend, chat, or call. Send a gift in a room, and post a story that fades after a day.",
+    online_now: "Online now",
+    nobody_online: "Nobody is visible right now.",
+    me_kicker: "Your public profile",
+    wasl_share: "Share it so friends can add you",
+    points_label: "Points",
+    avatar_label: "Profile photo",
+    contact_phone: "Contact number",
+    bio: "Bio",
+    facebook: "Facebook link",
+    save: "Save",
+    saved: "Profile saved",
+    stories_kicker: "Stories fade after a day",
+    add_story: "Add story",
+    install: "Install",
+    install_app: "Install app",
+    install_title: "Install Wasl on your device",
+    incoming_call: "Incoming call",
+    invite_to_call: "Invite to call",
+    invite: "Invite",
+    invited: "Invite sent",
+    ringing: "Ringing… waiting",
+    in_call: "In the call",
+    hangup: "End",
+    you_label: "You",
+    write_message: "Write a message…",
+    private_message: "Private message…",
+    view_once: "View once",
+    comment: "Comment",
+    like: "Like",
+    connected: "Online",
+    notice_call: "Call",
+    notice_friend: "Friend request",
+    notice_friend_ok: "Friend request accepted",
+    notice_message: "New message",
+    notice_story: "New story",
+    notice_gift: "Gift",
+    notice_presence: "Friend is online",
   },
   ur: {
     brand: "وصل",
@@ -215,5 +326,86 @@ export const dictionaries: Record<Locale, Dict> = {
     call_audio: "آڈیو",
     call_video: "ویڈیو",
     shortcuts: "وصل شارٹ کٹس",
+    notifications: "اطلاعات",
+    alerts: "تنبیہات",
+    mark_read: "پڑھا ہوا",
+    no_alerts: "ابھی کوئی اطلاع نہیں",
+    enable_push: "ڈیوائس اطلاعات چالو کریں",
+    accept: "قبول",
+    reject: "مسترد",
+    add: "شامل کریں",
+    options: "اختیارات",
+    you: "آپ",
+    online: "آن لائن",
+    offline: "آف لائن",
+    wasl_no: "نمبر",
+    view_profile: "پروفائل دیکھیں",
+    add_friend: "دوست شامل کریں",
+    dm: "ذاتی پیغام",
+    mute_alerts: "اطلاعات بند",
+    report: "رپورٹ",
+    block: "بلاک",
+    feed_kicker: "اراکین کی پوسٹس اور ریلز",
+    games_tv: "گیمز اور ٹی وی",
+    text: "متن",
+    image: "تصویر",
+    video: "ویڈیو",
+    reel: "ریل",
+    share_ph: "کیا شیئر کرنا ہے؟",
+    reel_ph: "ریل کا عنوان…",
+    pick_file: "تصویر یا ویڈیو چنیں",
+    file_picked: "فائل منتخب — تبدیل کرنے کے لیے دبائیں",
+    all_members: "سب",
+    friends_only: "صرف دوست",
+    publish: "شائع کریں",
+    members_kicker: "وصل پر رجسٹرڈ سب",
+    members_title: "اراکین",
+    search_people: "نام یا وصل نمبر جیسے 1001",
+    search_results: "نتائج",
+    no_match: "اس نام سے کوئی نہیں.",
+    incoming_requests: "آنے کی درخواستیں",
+    all_registered: "تمام اراکین",
+    loading: "لوڈ ہو رہا ہے…",
+    no_members: "ابھی کوئی رکن نہیں.",
+    lobby_kicker: "وصل میں خوش آمدید",
+    lobby_title: "لوگوں کے درمیان خاموش پل",
+    lobby_sub: "نام دبا کر دوست شامل کریں، چیٹ یا کال کریں.",
+    online_now: "اب آن لائن",
+    nobody_online: "ابھی کوئی نظر نہیں آ رہا.",
+    me_kicker: "آپ کی پروفائل",
+    wasl_share: "شیئر کریں تاکہ دوست شامل کر سکیں",
+    points_label: "پوائنٹس",
+    avatar_label: "پروفائل تصویر",
+    contact_phone: "رابطہ نمبر",
+    bio: "تعارف",
+    facebook: "فیس بک لنک",
+    save: "محفوظ",
+    saved: "پروفائل محفوظ ہو گئی",
+    stories_kicker: "اسٹوریز ایک دن بعد غائب",
+    add_story: "اسٹوری لگائیں",
+    install: "انسٹال",
+    install_app: "ایپ انسٹال",
+    install_title: "وصل اپنے فون پر انسٹال کریں",
+    incoming_call: "آنے والی کال",
+    invite_to_call: "کال کی دعوت",
+    invite: "دعوت",
+    invited: "دعوت بھیج دی",
+    ringing: "بج رہی ہے…",
+    in_call: "کال میں",
+    hangup: "ختم",
+    you_label: "آپ",
+    write_message: "پیغام لکھیں…",
+    private_message: "ذاتی پیغام…",
+    view_once: "ایک بار",
+    comment: "تبصرہ",
+    like: "پسند",
+    connected: "آن لائن",
+    notice_call: "کال",
+    notice_friend: "دوست کی درخواست",
+    notice_friend_ok: "درخواست قبول",
+    notice_message: "نیا پیغام",
+    notice_story: "نئی اسٹوری",
+    notice_gift: "تحفہ",
+    notice_presence: "دوست آن لائن",
   },
 };

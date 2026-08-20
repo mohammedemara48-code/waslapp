@@ -22,6 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { StoryRow } from "@/lib/chat/types";
+import { useI18n } from "@/lib/i18n";
 
 const TINTS = [
   { id: "ink", label: "حبر" },
@@ -38,6 +39,7 @@ function tintClass(tint: string) {
 }
 
 export function StoriesPage() {
+  const { t } = useI18n();
   const me = useCurrentUser();
   const queryClient = useQueryClient();
   const feed = useQuery({ queryKey: ["stories"], queryFn: () => listStories(), refetchInterval: 10000 });
@@ -140,7 +142,7 @@ export function StoriesPage() {
         <div className="flex items-end justify-between gap-3">
           <div>
             <p className="text-sm text-accent">صورة أو فيديو أو نص، مع فلتر وموسيقى</p>
-            <h1 className="mt-1 font-display text-3xl">القصص</h1>
+            <h1 className="mt-1 font-display text-3xl">{t.stories_title}</h1>
           </div>
           <Button onClick={() => setCompose(true)}>
             <Plus className="size-4" />

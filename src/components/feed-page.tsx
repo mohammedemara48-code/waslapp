@@ -13,8 +13,10 @@ import { PostCard } from "@/components/post-card";
 import { StoriesRail } from "@/components/stories-rail";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/lib/i18n";
 
 export function FeedPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const feed = useQuery({ queryKey: ["posts"], queryFn: () => listPosts(), refetchInterval: 12000 });
   const online = useQuery({ queryKey: ["online"], queryFn: () => listOnline(), refetchInterval: 15000 });
@@ -65,8 +67,8 @@ export function FeedPage() {
       <div className="mx-auto w-full max-w-xl space-y-6 px-5 py-8">
         <StoriesRail />
         <div>
-          <p className="text-sm text-accent">منشورات وريلز الأعضاء</p>
-          <h1 className="mt-1 font-display text-3xl">الخط الزمني</h1>
+          <p className="text-sm text-accent">{t.feed_kicker}</p>
+          <h1 className="mt-1 font-display text-3xl">{t.feed_title}</h1>
         </div>
         {(online.data?.length ?? 0) > 0 ? (
           <div className="flex gap-2 overflow-x-auto text-xs">
@@ -77,7 +79,7 @@ export function FeedPage() {
                 params={{ userId: p.user_id }}
                 className="shrink-0 rounded-full border border-border px-3 py-1.5 text-muted"
               >
-                {p.display_name} · متصل
+                {p.display_name} · {t.connected}
               </Link>
             ))}
           </div>
@@ -90,7 +92,7 @@ export function FeedPage() {
               </Link>
             ))}
             <Link to="/tools" className="shrink-0 rounded-full border border-accent/40 px-3 py-1.5 text-accent">
-              ألعاب وتلفاز
+              {t.games_tv}
             </Link>
           </div>
         ) : null}
@@ -99,10 +101,10 @@ export function FeedPage() {
           <div className="flex flex-wrap gap-1">
             {(
               [
-                ["text", "نص"],
-                ["image", "صورة"],
-                ["video", "فيديو"],
-                ["reel", "ريل"],
+                ["text", t.text],
+                ["image", t.image],
+                ["video", t.video],
+                ["reel", t.reel],
               ] as const
             ).map(([id, label]) => (
               <Button key={id} size="sm" variant={kind === id ? "default" : "secondary"} onClick={() => setKind(id)}>
@@ -115,12 +117,12 @@ export function FeedPage() {
             onChange={(e) => setBody(e.target.value)}
             rows={3}
             maxLength={500}
-            placeholder={kind === "reel" ? "وصف الريل…" : "ماذا تريد أن تشارك؟"}
+            placeholder={kind === "reel" ? t.reel_ph : t.share_ph}
           />
           {kind !== "text" ? (
             <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 text-sm text-muted">
               {kind === "image" ? <ImageIcon className="size-4" /> : <Video className="size-4" />}
-              {media ? "تم اختيار الملف — اضغط لتغييره" : "اختر صورة أو فيديو"}
+              {media ? t.file_picked : t.pick_file}
               <input
                 type="file"
                 accept={kind === "image" ? "image/*" : "video/*"}
@@ -135,13 +137,13 @@ export function FeedPage() {
           ) : null}
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" variant={audience === "all" ? "default" : "secondary"} onClick={() => setAudience("all")}>
-              كل الأعضاء
+              {t.all_members}
             </Button>
             <Button size="sm" variant={audience === "friends" ? "default" : "secondary"} onClick={() => setAudience("friends")}>
-              الأصدقاء
+              {t.friends_only}
             </Button>
             <Button className="ms-auto" disabled={busy} onClick={() => void publish()}>
-              {busy ? "جارٍ النشر…" : "نشر"}
+              {busy ? t.saving : t.publish}
             </Button>
           </div>
         </section>

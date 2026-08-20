@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Maximize2, Mic, MicOff, Minimize2, PhoneOff, PictureInPicture2, Video, VideoOff } from "lucide-react";
 import type { RemoteMedia } from "@/lib/media/media-room";
 import { startCallTone, stopCallTone } from "@/lib/call-tone";
+import { boostPlayback } from "@/lib/media/boost";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { STORY_FILTERS, filterClass } from "@/lib/story-style";
@@ -28,10 +30,15 @@ function VideoTile({
     const el = elRef.current;
     if (!el) return;
     el.srcObject = stream;
+    el.volume = 1;
     if (videoRef && typeof videoRef !== "function") {
       (videoRef as React.MutableRefObject<HTMLVideoElement | null>).current = el;
     }
-  }, [stream, videoRef]);
+    const stopBoost = muted ? undefined : boostPlayback(el, stream, true);
+    return () => {
+      stopBoost?.();
+    };
+  }, [stream, videoRef, muted]);
   const hasVideo = Boolean(stream?.getVideoTracks().some((t) => t.enabled && t.readyState === "live"));
 
   return (
@@ -81,6 +88,7 @@ export function CallStage({
   const [mode, setMode] = useState<"dock" | "full" | "mini">(kind === "video" ? "full" : "dock");
   const remoteVideo = useRef<HTMLVideoElement>(null);
   const connected = remotes.length > 0;
+  const { t } = useI18n();
 
   useEffect(() => {
     if (connected) {
@@ -135,7 +143,7 @@ export function CallStage({
       </Button>
       <Button variant="danger" onClick={onHangup}>
         <PhoneOff />
-        إنهاء
+        {t.hangup}
       </Button>
     </div>
   );
@@ -152,20 +160,20 @@ export function CallStage({
       )}
     >
       {mode !== "mini" ? (
-        <VideoTile stream={localStream} muted label="أنت" mirror fill={mode === "full"} fx={kind === "video" ? fx : "none"} />
+        <VideoTile stream={localStream} muted label={t.you_label} mirror fill={mode === "full"} fx={kind === "video" ? fx : "none"} />
       ) : null}
       {remotes.length ? (
         remotes.map((remote, i) => (
           <VideoTile
             key={remote.peerId}
             stream={remote.stream}
-            label={remote.name || "مشارك"}
+            label={remote.name || t.you_label}
             fill={mode === "full"}
             videoRef={i === 0 ? remoteVideo : undefined}
           />
         ))
       ) : mode === "full" ? null : (
-        <p className="text-center text-xs text-muted">يرن… بانتظار الرد</p>
+        <p className="text-center text-xs text-muted">{t.ringing}</p>
       )}
     </div>
   );
@@ -197,7 +205,7 @@ export function CallStage({
       <section className="fixed inset-0 z-50 flex flex-col bg-bg p-3 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-medium">{kind === "video" ? "مكالمة فيديو" : "مكالمة صوتية"}</h2>
-          <p className="text-xs text-muted">{connected ? `${remotes.length + 1} في المكالمة` : "يرن… بانتظار الرد"}</p>
+          <p className="text-xs text-muted">{connected ? t.in_call : t.ringing}</p>
         </div>
         {kind === "video" ? (
           <div className="mb-2 flex flex-wrap gap-1">
@@ -218,7 +226,7 @@ export function CallStage({
     <section className="flex flex-col gap-4 rounded-xl border border-border-strong bg-surface p-4 shadow-glow">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-medium">{kind === "video" ? "مكالمة فيديو" : "مكالمة صوتية"}</h2>
-        <p className="text-xs text-muted">{connected ? `${remotes.length + 1} في المكالمة` : "يرن… بانتظار الرد"}</p>
+        <p className="text-xs text-muted">{connected ? t.in_call : t.ringing}</p>
       </div>
       {tiles}
       {controls}

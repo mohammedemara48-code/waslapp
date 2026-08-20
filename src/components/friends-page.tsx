@@ -12,8 +12,10 @@ import { UserActions } from "@/components/user-actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/lib/i18n";
 
 export function FriendsPage() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const me = useCurrentUser();
   const queryClient = useQueryClient();
@@ -58,8 +60,8 @@ export function FriendsPage() {
     <AppShell active="friends">
       <div className="mx-auto w-full max-w-2xl space-y-8 px-5 py-8">
         <div>
-          <p className="text-sm text-accent">كل من سجّل في وصل</p>
-          <h1 className="mt-1 font-display text-3xl">المشتركون</h1>
+          <p className="text-sm text-accent">{t.members_kicker}</p>
+          <h1 className="mt-1 font-display text-3xl">{t.members_title}</h1>
         </div>
 
         <label className="relative block">
@@ -67,16 +69,16 @@ export function FriendsPage() {
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="اسم أو رقم وصل مثل 1001"
+            placeholder={t.search_people}
             className="pr-10"
           />
         </label>
 
         {q.trim().length >= 1 ? (
           <section className="space-y-2">
-            <h2 className="text-xs text-subtle">نتائج البحث</h2>
+            <h2 className="text-xs text-subtle">{t.search_results}</h2>
             {(results.data ?? []).length === 0 && !results.isPending ? (
-              <p className="text-sm text-muted">لا أحد بهذا الاسم.</p>
+              <p className="text-sm text-muted">{t.no_match}</p>
             ) : null}
             {(results.data ?? []).map((person) => (
               <div key={person.user_id} className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5">
@@ -92,7 +94,7 @@ export function FriendsPage() {
                 </div>
                 <Button size="sm" variant="secondary" onClick={() => void add(person.user_id)}>
                   <UserPlus className="size-4" />
-                  إضافة
+                  {t.add}
                 </Button>
               </div>
             ))}
@@ -101,7 +103,7 @@ export function FriendsPage() {
 
         {(list.data?.incoming.length ?? 0) > 0 ? (
           <section className="space-y-2">
-            <h2 className="text-xs text-subtle">طلبات واردة</h2>
+            <h2 className="text-xs text-subtle">{t.incoming_requests}</h2>
             {list.data?.incoming.map((item) => (
               <div key={item.id} className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5">
                 <Avatar>
@@ -124,10 +126,10 @@ export function FriendsPage() {
         ) : null}
 
         <section className="space-y-2">
-          <h2 className="text-xs text-subtle">كل المشتركين ({members.data?.length ?? 0})</h2>
-          {members.isPending ? <p className="text-sm text-muted">جارٍ التحميل…</p> : null}
+          <h2 className="text-xs text-subtle">{t.all_registered} ({members.data?.length ?? 0})</h2>
+          {members.isPending ? <p className="text-sm text-muted">{t.loading}</p> : null}
           {!members.isPending && (members.data?.length ?? 0) === 0 ? (
-            <p className="text-sm text-muted">لا مشتركون ظاهرون بعد. ادعُ شخصاً للدخول.</p>
+            <p className="text-sm text-muted">{t.no_members}</p>
           ) : null}
           {(members.data ?? []).map((person) => (
             <div key={person.user_id} className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5">
@@ -144,19 +146,19 @@ export function FriendsPage() {
                 <p className="truncate text-sm">{person.display_name}</p>
                 <p className="truncate text-xs text-muted">
                   رقم {person.wasl_no ?? "—"} · @{person.username ?? "بدون"}
-                  {person.online ? " · متصل" : " · غير متصل"}
+                  {person.online ? " · {t.online}" : " · {t.offline}"}
                 </p>
               </div>
               <UserActions person={person}>
-                <Button size="sm" variant="ghost">خيارات</Button>
+                <Button size="sm" variant="ghost">{t.options}</Button>
               </UserActions>
               {person.user_id !== me?.id ? (
                 <Button size="sm" variant="secondary" onClick={() => void add(person.user_id)}>
                   <UserPlus className="size-4" />
-                  إضافة
+                  {t.add}
                 </Button>
               ) : (
-                <span className="text-xs text-subtle">أنت</span>
+                <span className="text-xs text-subtle">{t.you}</span>
               )}
             </div>
           ))}
@@ -177,11 +179,11 @@ export function FriendsPage() {
                 <p className="truncate text-sm">{item.peer.display_name}</p>
                 <p className="truncate text-xs text-muted">
                   رقم {item.peer.wasl_no ?? "—"} · @{item.peer.username ?? "بدون"}
-                  {item.peer.online ? " · متصل" : " · غير متصل"}
+                  {item.peer.online ? " · {t.online}" : " · {t.offline}"}
                 </p>
               </div>
               <UserActions person={item.peer}>
-                <Button size="sm" variant="ghost">خيارات</Button>
+                <Button size="sm" variant="ghost">{t.options}</Button>
               </UserActions>
               <Button size="sm" variant="secondary" onClick={() => void chat(item.peer.user_id)}>
                 <MessageCircle className="size-4" />

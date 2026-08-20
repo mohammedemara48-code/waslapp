@@ -7,7 +7,7 @@ function context() {
   return ctx;
 }
 
-function beep(freq: number, duration: number, gain = 0.08) {
+function beep(freq: number, duration: number, gain = 0.22) {
   const ac = context();
   const osc = ac.createOscillator();
   const g = ac.createGain();
@@ -42,7 +42,7 @@ export function startCallTone(mode: "in" | "out") {
     timer = setInterval(pulse, 1800);
   } else {
     const pulse = () => {
-      beep(425, 0.35, 0.06);
+      beep(425, 0.35, 0.16);
     };
     pulse();
     timer = setInterval(pulse, 900);

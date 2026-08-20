@@ -9,6 +9,7 @@ import { I18nProvider, useI18n } from "@/lib/i18n";
 import { RadioProvider } from "@/lib/radio";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { RadioDock } from "@/components/radio-dock";
+import { IncomingCallBanner } from "@/components/incoming-call-banner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "sonner";
 
@@ -70,6 +71,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
               <ProfileSync />
               <PresenceHeartbeat />
               {children}
+              <IncomingCallBanner />
               <RadioDock />
               <DirAwareToaster />
             </RadioProvider>

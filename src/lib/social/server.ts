@@ -520,3 +520,37 @@ export const inviteToPlay = createServerFn({ method: "POST" })
     );
     return { ok: true as const };
   });
+
+export const inviteToCall = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { userId: string; slug: string; kind: "audio" | "video" }) => ({
+    userId: z.string().min(1).max(80).parse(input.userId),
+    slug: z.string().min(2).max(32).regex(/^[a-zA-Z0-9_-]+$/).parse(input.slug),
+    kind: input.kind === "video" ? ("video" as const) : ("audio" as const),
+  }))
+  .handler(async ({ context, data }) => {
+    if (data.userId === context.userId) throw new Error("اختر صديقاً");
+    const sql = await getSql();
+    const rooms = await sql<{ id: number }>`select id from rooms where slug = ${data.slug} limit 1`;
+    const room = rooms[0];
+    if (!room) throw new Error("الغرفة غير موجودة");
+    await sql`
+      insert into room_members (room_id, user_id)
+      values (${room.id}, ${data.userId})
+      on conflict (room_id, user_id) do nothing
+    `;
+    const me = await sql<{ display_name: string }>`
+      select display_name from profiles where user_id = ${context.userId} limit 1
+    `;
+    const label = me[0]?.display_name || "صديق";
+    await notify(
+      sql,
+      data.userId,
+      "call",
+      data.kind === "video" ? "مكالمة فيديو" : "مكالمة صوتية",
+      `${label} يدعوك للانضمام.`,
+      `/r/${data.slug}?call=${data.kind}`,
+    );
+    return { ok: true as const };
+  });
+

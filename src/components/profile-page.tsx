@@ -13,8 +13,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/lib/i18n";
 
 export function ProfilePage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const me = useQuery({ queryKey: ["me"], queryFn: () => getMyProfile() });
   const [username, setUsername] = useState("");
@@ -67,7 +69,7 @@ export function ProfilePage() {
       } catch {
         /* ignore */
       }
-      toast.success("حُفظ الملف");
+      toast.success(t.saved);
       void queryClient.invalidateQueries({ queryKey: ["me"] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "تعذر الحفظ");
@@ -80,13 +82,13 @@ export function ProfilePage() {
     <AppShell active="me">
       <form className="mx-auto w-full max-w-xl space-y-6 px-5 py-8" onSubmit={(e) => void save(e)}>
         <div>
-          <p className="text-sm text-accent">ملفك الظاهر للأصدقاء</p>
-          <h1 className="mt-1 font-display text-3xl">حسابي</h1>
+          <p className="text-sm text-accent">{t.me_kicker}</p>
+          <h1 className="mt-1 font-display text-3xl">{t.me_title}</h1>
           {me.data?.wasl_no ? (
-            <p className="mt-2 text-sm text-muted">رقم وصل: <span className="text-fg">{me.data.wasl_no}</span> — شاركه ليضيفك الأصدقاء</p>
+            <p className="mt-2 text-sm text-muted">{t.wasl_no} <span className="text-fg">{me.data.wasl_no}</span> — {t.wasl_share}</p>
           ) : null}
           <p className="mt-2 text-sm text-muted">
-            النقاط: {me.data?.points ?? 0} · <NameBadge role={me.data?.role} points={me.data?.points ?? 0} badge={me.data?.badge} />
+            {t.points_label}: {me.data?.points ?? 0} · <NameBadge role={me.data?.role} points={me.data?.points ?? 0} badge={me.data?.badge} />
           </p>
           <div className="mt-3">
             <ShareInvite waslNo={me.data?.wasl_no} />
@@ -99,29 +101,29 @@ export function ProfilePage() {
             <AvatarFallback className="text-lg">{initials(displayName || username)}</AvatarFallback>
           </Avatar>
           <label className="text-sm text-muted">
-            <span className="mb-2 block">صورة الواجهة</span>
+            <span className="mb-2 block">{t.avatar_label}</span>
             <Input type="file" accept="image/*" onChange={(e) => void onAvatar(e.target.files?.[0])} />
           </label>
         </div>
 
         <label className="block space-y-1.5">
-          <span className="text-xs text-muted">اسم المستخدم</span>
+          <span className="text-xs text-muted">{t.username}</span>
           <Input value={username} onChange={(e) => setUsername(e.target.value)} required minLength={3} maxLength={20} />
         </label>
         <label className="block space-y-1.5">
-          <span className="text-xs text-muted">الاسم المستعار</span>
+          <span className="text-xs text-muted">{t.nickname}</span>
           <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} required minLength={2} maxLength={40} />
         </label>
         <label className="block space-y-1.5">
-          <span className="text-xs text-muted">رقم للتواصل</span>
+          <span className="text-xs text-muted">{t.contact_phone}</span>
           <Input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="اختياري" />
         </label>
         <label className="block space-y-1.5">
-          <span className="text-xs text-muted">نبذة</span>
+          <span className="text-xs text-muted">{t.bio}</span>
           <Textarea value={bio} onChange={(e) => setBio(e.target.value)} maxLength={180} rows={3} />
         </label>
         <label className="block space-y-1.5">
-          <span className="text-xs text-muted">رابط فيسبوك</span>
+          <span className="text-xs text-muted">{t.facebook}</span>
           <Input value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder="https://facebook.com/..." />
         </label>
 

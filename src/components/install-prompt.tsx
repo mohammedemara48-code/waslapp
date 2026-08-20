@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useI18n } from "@/lib/i18n";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -9,6 +10,7 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 export function InstallPrompt({ compact = false }: { compact?: boolean }) {
+  const { t } = useI18n();
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [open, setOpen] = useState(false);
   const [installed, setInstalled] = useState(false);
@@ -48,12 +50,12 @@ export function InstallPrompt({ compact = false }: { compact?: boolean }) {
     <>
       <Button variant={compact ? "ghost" : "secondary"} size={compact ? "icon" : "sm"} onClick={() => void install()}>
         <Download className="size-4" />
-        {compact ? <span className="sr-only">تثبيت</span> : "تثبيت التطبيق"}
+        {compact ? <span className="sr-only">{t.install}</span> : t.install_app}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>ثبّت وصل على جهازك</DialogTitle>
+            <DialogTitle>{t.install_title}</DialogTitle>
             <DialogDescription>
               التطبيق جاهز للعمل كبرنامج مستقل من الشاشة الرئيسية، وهذا هو الطريق نفسه لاحقاً إلى متجر بلاي عبر غلاف الويب.
             </DialogDescription>

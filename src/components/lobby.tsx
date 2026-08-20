@@ -8,8 +8,10 @@ import { StoriesRail } from "@/components/stories-rail";
 import { UserActions } from "@/components/user-actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useI18n } from "@/lib/i18n";
 
 export function Lobby() {
+  const { t } = useI18n();
   const rooms = useQuery({
     queryKey: ["rooms"],
     queryFn: () => listRooms(),
@@ -37,16 +39,14 @@ export function Lobby() {
     >
       <div className="mx-auto flex w-full max-w-3xl flex-col px-5 py-8">
         <StoriesRail />
-        <p className="mt-8 text-sm text-accent">أهلاً بك في وصل</p>
-        <h1 className="mt-2 font-display text-4xl leading-tight md:text-5xl">جسر هادئ بين الناس</h1>
-        <p className="mt-4 max-w-lg text-muted">
-          اضغط اسماً لإضافة صديق أو محادثة أو اتصال. أرسل هدية داخل الغرفة، وانشر قصة تختفي بعد يوم.
-        </p>
+        <p className="mt-8 text-sm text-accent">{t.lobby_kicker}</p>
+        <h1 className="mt-2 font-display text-4xl leading-tight md:text-5xl">{t.lobby_title}</h1>
+        <p className="mt-4 max-w-lg text-muted">{t.lobby_sub}</p>
 
         <section className="mt-8">
-          <p className="mb-3 text-xs text-subtle">متواجدون الآن</p>
+          <p className="mb-3 text-xs text-subtle">{t.online_now}</p>
           {(online.data ?? []).length === 0 ? (
-            <p className="text-sm text-muted">لا أحد ظاهر حالياً. ادعُ صديقاً أو ادخل غرفة.</p>
+            <p className="text-sm text-muted">{t.nobody_online}</p>
           ) : (
             <div className="flex gap-3 overflow-x-auto pb-1">
               {(online.data ?? []).map((person) => (
