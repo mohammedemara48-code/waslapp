@@ -7,6 +7,7 @@ import { RANK_POINTS, rankLabel } from "@/lib/points";
 import { AppShell } from "@/components/app-shell";
 import { NameBadge } from "@/components/name-badge";
 import { SudokuGame } from "@/components/sudoku-game";
+import { ChessGame } from "@/components/chess-game";
 import { Button } from "@/components/ui/button";
 
 const CHANNELS = [
@@ -57,6 +58,7 @@ export function ToolsPage() {
         {tab === "games" ? (
           <>
             <SudokuGame />
+            <ChessGame />
             <section className="space-y-2">
               <h2 className="text-sm">ادعُ صديقاً للعب</h2>
               {(friends.data?.friends ?? []).length === 0 ? (

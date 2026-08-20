@@ -51,3 +51,14 @@ export const completeSudoku = createServerFn({ method: "POST" })
     const res = await awardPoints(sql, context.userId, `sudoku:${data.level}:${data.puzzle}`, amount);
     return { ...res, amount, rank: rankFromPoints(res.points) };
   });
+
+export const completeChess = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((level: string) => z.enum(["easy", "medium", "hard"]).parse(level))
+  .handler(async ({ context, data: level }) => {
+    const sql = await getSql();
+    const amount = level === "hard" ? 55 : level === "medium" ? 35 : 20;
+    const key = `chess:${level}:${Date.now()}`;
+    const res = await awardPoints(sql, context.userId, key, amount);
+    return { ...res, amount, rank: rankFromPoints(res.points) };
+  });
