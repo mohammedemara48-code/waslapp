@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
+import { notifyUser } from "@/lib/push/server";
 import type { MessageRow } from "@/lib/chat/types";
 
 export const getInboxCounts = createServerFn({ method: "GET" })
@@ -82,16 +83,14 @@ export const reportUser = createServerFn({ method: "POST" })
       select display_name from profiles where user_id = ${context.userId} limit 1
     `;
     for (const o of owners) {
-      await sql`
-        insert into notifications (user_id, kind, title, body, href)
-        values (
-          ${o.user_id},
-          'report',
-          'بلاغ جديد',
-          ${`${me[0]?.display_name ?? "عضو"} أبلغ عن حساب`},
-          ${`/u/${data.userId}`}
-        )
-      `;
+      await notifyUser(
+        sql,
+        o.user_id,
+        "report",
+        "بلاغ جديد",
+        `${me[0]?.display_name ?? "عضو"} أبلغ عن حساب`,
+        `/u/${data.userId}`,
+      );
     }
     return { ok: true as const };
   });

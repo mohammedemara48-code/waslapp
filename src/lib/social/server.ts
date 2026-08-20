@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
+import { notifyUser } from "@/lib/push/server";
 import type { FriendshipRow, NotificationRow, ProfileRow, RoomRow } from "@/lib/chat/types";
 
 const usernameSchema = z
@@ -254,10 +255,7 @@ async function notify(
   body: string,
   href: string | null,
 ) {
-  await sql`
-    insert into notifications (user_id, kind, title, body, href)
-    values (${userId}, ${kind}, ${title}, ${body}, ${href})
-  `;
+  await notifyUser(sql, userId, kind, title, body, href);
 }
 
 export const sendFriendRequest = createServerFn({ method: "POST" })

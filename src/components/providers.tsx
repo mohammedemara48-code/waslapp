@@ -4,7 +4,7 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { ensureProfile } from "@/lib/social/server";
 import { rememberAccount } from "@/lib/accounts";
-import { registerServiceWorker, enableBrowserNotifications } from "@/lib/pwa";
+import { registerServiceWorker, enableBrowserNotifications, subscribeWebPush } from "@/lib/pwa";
 import { RadioProvider } from "@/lib/radio";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { RadioDock } from "@/components/radio-dock";
@@ -16,7 +16,9 @@ function ProfileSync() {
   useEffect(() => {
     if (isPending || !user) return;
     rememberAccount(user.displayName ?? "حساب", user.primaryEmail);
-    void enableBrowserNotifications();
+    void enableBrowserNotifications().then((ok) => {
+      if (ok) void subscribeWebPush();
+    });
     void ensureProfile({
       data: {
         displayName: user.displayName,

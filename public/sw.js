@@ -70,34 +70,39 @@ self.addEventListener("message", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  let title = "وصل";
-  let body = "إشعار جديد";
-  let href = "/";
-  try {
-    if (event.data) {
-      const json = event.data.json();
-      title = json.title || title;
-      body = json.body || body;
-      href = json.href || href;
-    }
-  } catch {
-    try {
-      body = event.data ? event.data.text() : body;
-    } catch {
-      /* ignore */
-    }
-  }
   event.waitUntil(
-    self.registration.showNotification(title, {
-      body,
-      icon: "/icon-192.png",
-      badge: "/icon-192.png",
-      data: { href },
-      dir: "rtl",
-      lang: "ar",
-      vibrate: [40, 30, 80],
-      tag: "wasl-push",
-      renotify: true,
-    }),
+    (async () => {
+      let title = "وصل";
+      let body = "إشعار جديد";
+      let href = "/";
+      try {
+        if (event.data) {
+          const json = event.data.json();
+          title = json.title || title;
+          body = json.body || body;
+          href = json.href || href;
+        }
+      } catch {
+        try {
+          body = event.data ? event.data.text() : body;
+        } catch {
+          /* ignore */
+        }
+      }
+      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      const visible = windows.some((c) => "visibilityState" in c && c.visibilityState === "visible");
+      if (visible) return;
+      await self.registration.showNotification(title, {
+        body,
+        icon: "/icon-192.png",
+        badge: "/icon-192.png",
+        data: { href },
+        dir: "rtl",
+        lang: "ar",
+        vibrate: [40, 30, 80],
+        tag: "wasl-push",
+        renotify: true,
+      });
+    })(),
   );
 });

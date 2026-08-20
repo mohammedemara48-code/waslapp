@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
+import { notifyUser } from "@/lib/push/server";
 import { STICKERS } from "@/lib/stickers";
 import { assertStoredMedia } from "@/lib/media/limits";
 import type { ProfileRow, StoryRow } from "@/lib/chat/types";
@@ -51,10 +52,7 @@ async function notify(
   body: string,
   href: string | null,
 ) {
-  await sql`
-    insert into notifications (user_id, kind, title, body, href)
-    values (${userId}, ${kind}, ${title}, ${body}, ${href})
-  `;
+  await notifyUser(sql, userId, kind, title, body, href);
 }
 
 export const heartbeat = createServerFn({ method: "POST" })

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
+import { notifyUser } from "@/lib/push/server";
 import { assertStoredMedia } from "@/lib/media/limits";
 import type { MessageRow, ProfileRow, RoomDetail, RoomRow } from "./types";
 
@@ -282,16 +283,14 @@ export const sendMessage = createServerFn({ method: "POST" })
           select muter_id from mutes where muter_id = ${other.user_id} and muted_id = ${context.userId} limit 1
         `;
         if (muted[0]) continue;
-        await sql`
-          insert into notifications (user_id, kind, title, body, href)
-          values (
-            ${other.user_id},
-            'message',
-            ${profile?.display_name ?? "رسالة خاصة"},
-            ${preview.slice(0, 140)},
-            ${`/r/${data.slug}`}
-          )
-        `;
+        await notifyUser(
+          sql,
+          other.user_id,
+          "message",
+          profile?.display_name ?? "رسالة خاصة",
+          preview.slice(0, 140),
+          `/r/${data.slug}`,
+        );
       }
     }
     return {

@@ -4,6 +4,7 @@ import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
 import { assertStoredMedia } from "@/lib/media/limits";
 import { awardPoints } from "@/lib/points/server";
+import { notifyUser } from "@/lib/push/server";
 import type { PostCommentRow, PostRow } from "@/lib/chat/types";
 
 function displayAvatar(row: { avatar_data?: string | null; avatar_url?: string | null }): string | null {
@@ -191,16 +192,14 @@ export const publishPost = createServerFn({ method: "POST" })
       select display_name from profiles where user_id = ${context.userId} limit 1
     `;
     for (const f of friends) {
-      await sql`
-        insert into notifications (user_id, kind, title, body, href)
-        values (
-          ${f.user_id},
-          'post',
-          ${`منشور جديد من ${me[0]?.display_name ?? "صديقك"}`},
-          ${data.kind === "reel" ? "ريل جديد على الخط الزمني" : "شاهد المنشور"},
-          '/'
-        )
-      `;
+      await notifyUser(
+        sql,
+        f.user_id,
+        "post",
+        `منشور جديد من ${me[0]?.display_name ?? "صديقك"}`,
+        data.kind === "reel" ? "ريل جديد على الخط الزمني" : "شاهد المنشور",
+        "/",
+      );
     }
     return { ok: true as const };
   });
@@ -296,16 +295,14 @@ export const addPostComment = createServerFn({ method: "POST" })
       const me = await sql<{ display_name: string }>`
         select display_name from profiles where user_id = ${context.userId} limit 1
       `;
-      await sql`
-        insert into notifications (user_id, kind, title, body, href)
-        values (
-          ${post[0].user_id},
-          'comment',
-          ${`${me[0]?.display_name ?? "عضو"} علّق على منشورك`},
-          ${data.body},
-          '/'
-        )
-      `;
+      await notifyUser(
+        sql,
+        post[0].user_id,
+        "comment",
+        `${me[0]?.display_name ?? "عضو"} علّق على منشورك`,
+        data.body,
+        "/",
+      );
     }
     return { ok: true as const };
   });

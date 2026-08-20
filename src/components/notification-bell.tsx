@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 import { listNotifications, markNotificationsRead } from "@/lib/social/server";
-import { announceNotification, enableBrowserNotifications } from "@/lib/pwa";
+import { announceNotification, enableBrowserNotifications, subscribeWebPush } from "@/lib/pwa";
 import { formatClock } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -96,7 +96,9 @@ export function NotificationBell() {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={() => {
-            void enableBrowserNotifications();
+            void enableBrowserNotifications().then((ok) => {
+              if (ok) void subscribeWebPush();
+            });
           }}
         >
           تفعيل تنبيهات الجهاز

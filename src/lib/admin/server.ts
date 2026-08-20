@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
+import { notifyUser } from "@/lib/push/server";
 import type { ProfileRow, RoomRow } from "@/lib/chat/types";
 
 async function requireOwner(userId: string) {
@@ -138,10 +139,7 @@ export const adminBroadcast = createServerFn({ method: "POST" })
       select user_id from profiles where role <> 'banned' and user_id <> ${context.userId}
     `;
     for (const u of users) {
-      await sql`
-        insert into notifications (user_id, kind, title, body, href)
-        values (${u.user_id}, 'admin', ${data.title}, ${data.body}, '/')
-      `;
+      await notifyUser(sql, u.user_id, "admin", data.title, data.body, "/");
     }
     return { ok: true as const, count: users.length };
   });
