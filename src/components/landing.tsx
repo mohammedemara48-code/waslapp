@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { GROK_PROVIDERS, authClient, authEnabled, signIn } from "@/lib/auth/client";
+import { GROK_PROVIDERS, authClient, authEnabled, onPublicDeploy, signIn } from "@/lib/auth/client";
 import { claimLocalAccount } from "@/lib/social/server";
-import { phoneToEmail } from "@/lib/utils";
+import { emailToPhone, phoneToEmail } from "@/lib/utils";
 import { listSavedAccounts } from "@/lib/accounts";
 import { BrandMark } from "@/components/brand-mark";
 import { InstallPrompt } from "@/components/install-prompt";
@@ -35,7 +35,8 @@ function GoogleMark() {
 }
 
 export function Landing() {
-  const [mode, setMode] = useState<"google" | "phone">("google");
+  const publicHost = typeof window !== "undefined" && onPublicDeploy();
+  const [mode, setMode] = useState<"google" | "phone">(publicHost ? "phone" : "google");
   const [tab, setTab] = useState<"in" | "up">("up");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +45,7 @@ export function Landing() {
   const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
   const google = GROK_PROVIDERS.find((p) => p.idp === "google");
-  const others = GROK_PROVIDERS.filter((p) => p.idp !== "google");
+  const others = publicHost ? [] : GROK_PROVIDERS.filter((p) => p.idp !== "google");
   const saved = listSavedAccounts();
 
   async function start(providerId: string) {
@@ -56,6 +57,18 @@ export function Landing() {
       setError(err instanceof Error ? err.message : "تعذر تسجيل الدخول");
       setBusy(null);
     }
+  }
+
+  function openSaved(email: string) {
+    const localPhone = emailToPhone(email);
+    if (localPhone) {
+      setMode("phone");
+      setTab("in");
+      setPhone(localPhone);
+      setError("أدخل كلمة السر ثم اضغط دخول");
+      return;
+    }
+    void start(google?.providerId ?? "google");
   }
 
   async function submitPhone(e: React.FormEvent) {
@@ -185,7 +198,7 @@ export function Landing() {
                         variant="secondary"
                         className="w-full"
                         disabled={busy !== null}
-                        onClick={() => void start(google?.providerId ?? others[0]!.providerId)}
+                        onClick={() => openSaved(a.email)}
                       >
                         دخول كـ {a.label}
                       </Button>
@@ -267,6 +280,23 @@ export function Landing() {
                 <Button type="submit" className="w-full" disabled={busy !== null}>
                   {busy === "phone" ? "جارٍ الحفظ…" : tab === "up" ? "إنشاء الحساب" : "دخول"}
                 </Button>
+                {saved.length > 0 ? (
+                  <div className="space-y-2 pt-2">
+                    <p className="text-xs text-subtle">حسابات محفوظة على هذا الجهاز</p>
+                    {saved.map((a) => (
+                      <Button
+                        key={a.email}
+                        type="button"
+                        variant="secondary"
+                        className="w-full"
+                        disabled={busy !== null}
+                        onClick={() => openSaved(a.email)}
+                      >
+                        دخول كـ {a.label}
+                      </Button>
+                    ))}
+                  </div>
+                ) : null}
               </form>
             )}
             {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}

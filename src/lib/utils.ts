@@ -61,6 +61,11 @@ export function phoneToEmail(phone: string): string {
   return `${digits}@phone.wasl.app`;
 }
 
+export function emailToPhone(email: string): string | null {
+  const m = email.trim().toLowerCase().match(/^(\d+)@phone\.wasl\.app$/);
+  return m ? m[1]! : null;
+}
+
 export function profileAvatar(profile: { avatar_url?: string | null } | null | undefined): string | null {
   return profile?.avatar_url ?? null;
 }

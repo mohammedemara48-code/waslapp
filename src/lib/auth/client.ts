@@ -77,6 +77,12 @@ function inLivePreview(): boolean {
   );
 }
 
+export function onPublicDeploy(): boolean {
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  return host.endsWith(".vercel.app") || host.endsWith(".wasl.app");
+}
+
 /** Message the popup posts back to the opener once sign-in completes. */
 type PopupMessage = { source: "grok-auth-popup"; token: string | null; error?: string };
 
@@ -124,9 +130,6 @@ export async function signIn(
     const token = await waitForPopupToken(popup);
     if (!token) throw new Error("Sign-in was cancelled or failed");
     setBearerToken(token);
-    // Refresh the client session store with the bearer attached (onRequest).
-    // Avoid a full iframe reload when we're already on the destination — that
-    // reload was the slow "still loading after the popup closed" feeling.
     try {
       await authClient.getSession();
     } catch {
@@ -139,6 +142,26 @@ export async function signIn(
         window.location.href = callbackURL;
       }
     }
+    return;
+  }
+
+  if (onPublicDeploy()) {
+    const social =
+      providerId === "google" || providerId.includes("google")
+        ? "google"
+        : providerId === "twitter" || providerId.includes("twitter") || providerId === "x"
+          ? "twitter"
+          : null;
+    if (social !== "google") {
+      throw new Error("تسجيل جوجل غير مُعدّ على هذا النطاق. استخدم رقم الجوال.");
+    }
+    const { data, error } = await authClient.signIn.social({
+      provider: "google",
+      callbackURL,
+      errorCallbackURL,
+    });
+    if (error) throw new Error(error.message ?? "تعذر تسجيل الدخول بجوجل");
+    if (data?.url) window.location.href = data.url;
     return;
   }
 
