@@ -99,6 +99,7 @@ const extraTrusted = (env("BETTER_AUTH_TRUSTED_ORIGINS") ?? "")
   .split(/[, \s]+/)
   .map((s) => s.trim())
   .filter(Boolean);
+const siteUrl = (env("SITE_URL") ?? env("VITE_SITE_URL"))?.replace(/\/$/, "");
 // Explicit `string[]` (not a readonly tuple) — Better Auth's DynamicBaseURLConfig
 // requires a mutable `allowedHosts: string[]`.
 const previewAllowedHosts: string[] = [...PREVIEW_ALLOWED_HOSTS];
@@ -124,6 +125,7 @@ const baseURL = explicitBaseURL ?? {
 // Missing entries here surface as FORBIDDEN "Invalid origin".
 const trustedOrigins: string[] = [
   ...(explicitBaseURL ? [explicitBaseURL] : []),
+  ...(siteUrl ? [siteUrl] : []),
   ...(vercelHost ? [`https://${vercelHost}`] : []),
   ...extraTrusted,
   "https://*.vercel.app",

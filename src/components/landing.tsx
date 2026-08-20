@@ -9,6 +9,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/lib/i18n";
+import { siteOrigin } from "@/lib/site";
 
 function GoogleMark() {
   return (
@@ -326,7 +327,7 @@ export function Landing() {
               operatingSystem: "Web, Android, iOS",
               inLanguage: "ar",
               description: "تطبيق تواصل عربي: غرف، رسائل خاصة، صوت وفيديو، قصص ومنشورات.",
-              url: "https://waslapp-sigma.vercel.app/",
+              url: `${siteOrigin()}/`,
               offers: { "@type": "Offer", price: "0", priceCurrency: "EGP" },
             }),
           }}

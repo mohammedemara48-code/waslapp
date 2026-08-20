@@ -1,14 +1,15 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { AppProviders } from "@/components/providers";
+import { siteOrigin } from "@/lib/site";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "وصل";
 const APP_DESC =
   "وصل تطبيق تواصل عربي: غرف دردشة، رسائل خاصة، مكالمات صوت وفيديو، قصص ومنشورات. ثبّته على هاتفك.";
 const host = import.meta.env.VITE_PUBLIC_HOSTNAME;
-const siteUrl = host ? `https://${host}` : "https://waslapp-sigma.vercel.app";
-const ogImage = host ? `https://${host}/og.jpg` : undefined;
+const siteUrl = siteOrigin();
+const ogImage = host ? `https://${host}/og.jpg` : `${siteUrl}/og.jpg`;
 const xBanner = host
   ? `https://og.grok.me/v1/banner.png?host=${encodeURIComponent(host)}&title=${encodeURIComponent(APP_NAME)}&color=E8C36A`
   : undefined;
