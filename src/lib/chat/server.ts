@@ -207,6 +207,7 @@ export const sendMessage = createServerFn({ method: "POST" })
   .validator((input: {
     slug: string;
     body?: string;
+    viewOnce?: boolean;
     attachment?: { name: string; type: string; data: string } | null;
   }) => {
     const slug = slugSchema.parse(input.slug);
@@ -216,9 +217,14 @@ export const sendMessage = createServerFn({ method: "POST" })
     if (body.length > 2000) throw new Error("الرسالة طويلة جداً");
     if (attachment) {
       if (!attachment.name || attachment.name.length > 120) throw new Error("اسم الملف غير صالح");
-      const data = assertStoredMedia(attachment.data, "المرفق");
-      if (!data) throw new Error("المرفق فارغ");
-      attachment = { ...attachment, data };
+      if (attachment.type !== "call-event") {
+        const data = assertStoredMedia(attachment.data, "المرفق");
+        if (!data) throw new Error("المرفق فارغ");
+        attachment = { ...attachment, data };
+      }
+      if (input.viewOnce && !attachment.type.startsWith("once:") && attachment.type !== "call-event") {
+        attachment = { ...attachment, type: `once:${attachment.type}` };
+      }
     }
     return { slug, body, attachment };
   })
@@ -305,6 +311,45 @@ export const sendMessage = createServerFn({ method: "POST" })
       attachment_type: saved.attachment_type,
       attachment_data: saved.attachment_data,
     } satisfies MessageRow;
+  });
+
+export const sendCallEvent = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { slug: string; kind: "audio" | "video"; status: "missed" | "no-answer" | "rejected" | "ended" }) => ({
+    slug: slugSchema.parse(input.slug),
+    kind: input.kind,
+    status: input.status,
+  }))
+  .handler(async ({ context, data }) => {
+    const saved = await sendMessage({
+      data: {
+        slug: data.slug,
+        body: "",
+        attachment: { name: data.kind, type: "call-event", data: data.status },
+      },
+    });
+    return saved;
+  });
+
+export const consumeViewOnce = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((id: number) => z.number().int().positive().parse(id))
+  .handler(async ({ context, data: id }) => {
+    const sql = await getSql();
+    const rows = await sql<{ id: number; room_id: number }>`
+      select m.id, m.room_id
+      from messages m
+      join room_members rm on rm.room_id = m.room_id and rm.user_id = ${context.userId}
+      where m.id = ${id} and m.attachment_type like 'once:%'
+      limit 1
+    `;
+    if (!rows[0]) throw new Error("المرفق غير موجود");
+    await sql`
+      update messages
+      set attachment_data = '', body = case when body = '' then 'مرفق لمرة واحدة' else body end
+      where id = ${id} and attachment_type like 'once:%'
+    `;
+    return { ok: true as const };
   });
 
 export const createRoom = createServerFn({ method: "POST" })

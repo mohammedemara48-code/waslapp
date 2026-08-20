@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Hash, Gift, ImagePlus, Menu, Mic, Paperclip, Pin, Search, Send, Star, Users, Video, X } from "lucide-react";
+import { Hash, Gift, ImagePlus, Menu, Mic, Paperclip, Pin, Search, Send, Star, Users, Video, X, Gamepad2, Tv } from "lucide-react";
 import { toast } from "sonner";
-import { getRoom, joinRoom, listMessages, listRooms, sendMessage } from "@/lib/chat/server";
+import { getRoom, joinRoom, listMessages, listRooms, sendCallEvent, sendMessage } from "@/lib/chat/server";
 import { notifyPeers } from "@/lib/social/server";
 import { notifyRoomPresence, sendSticker } from "@/lib/live/server";
 import { markRoomRead, pinRoomMessage, toggleMicQueue, listMicQueue, toggleSaveMessage } from "@/lib/engage/server";
@@ -18,7 +18,8 @@ import { NotificationBell } from "@/components/notification-bell";
 import { AccountMenu } from "@/components/account-menu";
 import { BrandMark } from "@/components/brand-mark";
 import { CallStage } from "@/components/call-stage";
-import { MediaVideo } from "@/components/media-video";
+import { MessageMedia } from "@/components/message-media";
+import { VoiceNoteButton } from "@/components/voice-note-button";
 import { startCallTone, stopCallTone } from "@/lib/call-tone";
 import { playMessageSound } from "@/lib/pwa";
 import { RoomList } from "@/components/room-list";
@@ -44,7 +45,7 @@ type WireChat = {
 
 type WireTyping = { type: "typing"; name: string };
 type WireCall = { type: "call"; kind: "audio" | "video"; name: string };
-type WireCallEnd = { type: "call-end" };
+type WireCallEnd = { type: "call-end"; reason?: "reject" | "hangup" };
 
 function mergeMessages(current: MessageRow[], incoming: MessageRow[]): MessageRow[] {
   const map = new Map<number, MessageRow>();
@@ -87,6 +88,7 @@ export function RoomView({ slug }: { slug: string }) {
   const [filter, setFilter] = useState("");
   const [sending, setSending] = useState(false);
   const [attachment, setAttachment] = useState<{ name: string; type: string; data: string } | null>(null);
+  const [viewOnce, setViewOnce] = useState(false);
   const [roomsOpen, setRoomsOpen] = useState(false);
   const [peopleOpen, setPeopleOpen] = useState(false);
   const [callKind, setCallKind] = useState<"audio" | "video" | null>(null);
@@ -98,6 +100,10 @@ export function RoomView({ slug }: { slug: string }) {
   const [giftsOpen, setGiftsOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const incomingRef = useRef(incoming);
+  const callKindRef = useRef(callKind);
+  incomingRef.current = incoming;
+  callKindRef.current = callKind;
 
   useEffect(() => {
     void joinRoom({ data: slug }).then(() => {
@@ -211,7 +217,9 @@ export function RoomView({ slug }: { slug: string }) {
     }
   }
 
-  function hangup() {
+  function hangup(status?: "no-answer" | "ended" | "rejected") {
+    const kind = callKind;
+    const answered = media.remotes.length > 0;
     localStream?.getTracks().forEach((t) => t.stop());
     setLocalStream(null);
     setCallKind(null);
@@ -219,8 +227,30 @@ export function RoomView({ slug }: { slug: string }) {
     setMuted(false);
     setIncoming(null);
     stopCallTone();
-    p2p.send({ type: "call-end" });
+    p2p.send({ type: "call-end", reason: status === "rejected" ? "reject" : "hangup" });
+    if (kind && status) {
+      void sendCallEvent({ data: { slug, kind, status } })
+        .then((saved) => {
+          queryClient.setQueryData<MessageRow[]>(["messages", slug], (prev) => mergeMessages(prev ?? [], [saved]));
+        })
+        .catch(() => {});
+    } else if (kind && !answered) {
+      void sendCallEvent({ data: { slug, kind, status: "no-answer" } })
+        .then((saved) => {
+          queryClient.setQueryData<MessageRow[]>(["messages", slug], (prev) => mergeMessages(prev ?? [], [saved]));
+        })
+        .catch(() => {});
+    }
   }
+
+  useEffect(() => {
+    if (!callKind || media.remotes.length > 0) return;
+    const t = window.setTimeout(() => {
+      toast.message("لم يتم الرد");
+      hangup("no-answer");
+    }, 35000);
+    return () => window.clearTimeout(t);
+  }, [callKind, media.remotes.length]);
 
   function toggleMute() {
     const next = !muted;
@@ -256,9 +286,11 @@ export function RoomView({ slug }: { slug: string }) {
     setSending(true);
     setDraft("");
     const pending = attachment;
+    const once = viewOnce;
     setAttachment(null);
+    setViewOnce(false);
     try {
-      const saved = await sendMessage({ data: { slug, body, attachment: pending } });
+      const saved = await sendMessage({ data: { slug, body, attachment: pending, viewOnce: once } });
       queryClient.setQueryData<MessageRow[]>(["messages", slug], (prev) =>
         mergeMessages(prev ?? [], [saved]),
       );
@@ -417,6 +449,12 @@ export function RoomView({ slug }: { slug: string }) {
             />
           </label>
           <div className="flex items-center gap-1">
+            <Link to="/tools" className="grid size-9 place-items-center rounded-md text-muted hover:bg-elevated hover:text-fg" aria-label="الألعاب">
+              <Gamepad2 className="size-4" />
+            </Link>
+            <Link to="/broadcast" className="grid size-9 place-items-center rounded-md text-muted hover:bg-elevated hover:text-fg" aria-label="تلفاز وراديو">
+              <Tv className="size-4" />
+            </Link>
             <NotificationBell />
             <Button variant="secondary" size="sm" onClick={() => void startCall("audio")} disabled={callKind !== null}>
               <Mic className="size-4" />
@@ -452,9 +490,17 @@ export function RoomView({ slug }: { slug: string }) {
                   <Button
                     variant="ghost"
                     onClick={() => {
+                      const kind = incoming.kind;
                       setIncoming(null);
                       stopCallTone();
-                      p2p.send({ type: "call-end" });
+                      p2p.send({ type: "call-end", reason: "reject" });
+                      void sendCallEvent({ data: { slug, kind, status: "rejected" } })
+                        .then((saved) => {
+                          queryClient.setQueryData<MessageRow[]>(["messages", slug], (prev) =>
+                            mergeMessages(prev ?? [], [saved]),
+                          );
+                        })
+                        .catch(() => {});
                     }}
                   >
                     رفض
@@ -530,35 +576,15 @@ export function RoomView({ slug }: { slug: string }) {
                                 mine ? "bg-accent text-accent-fg rounded-tl-sm" : "bg-elevated text-fg rounded-tr-sm",
                               )}
                             >
-                              {msg.body ? <p>{msg.body}</p> : null}
+                              {msg.body && msg.attachment_type !== "call-event" ? <p>{msg.body}</p> : null}
                               {msg.attachment_type === "sticker" ? (
                                 <p className="mt-2 flex items-center gap-2 font-display text-xl">
                                   <StickerMark id={msg.attachment_name ?? "gift"} className="size-6" />
                                   {msg.attachment_data || msg.body}
                                 </p>
-                              ) : null}
-                              {msg.attachment_data && msg.attachment_type?.startsWith("image/") ? (
-                                <img
-                                  src={msg.attachment_data}
-                                  alt={msg.attachment_name ?? ""}
-                                  className="mt-2 max-h-56 rounded-md object-cover"
-                                />
-                              ) : null}
-                              {msg.attachment_data && msg.attachment_type?.startsWith("video/") ? (
-                                <MediaVideo
-                                  src={msg.attachment_data}
-                                  className="mt-2 max-h-56 w-full rounded-md"
-                                />
-                              ) : null}
-                              {msg.attachment_data && !msg.attachment_type?.startsWith("image/") && !msg.attachment_type?.startsWith("video/") && msg.attachment_type !== "sticker" ? (
-                                <a
-                                  href={msg.attachment_data}
-                                  download={msg.attachment_name ?? "file"}
-                                  className="mt-2 block text-xs underline underline-offset-4"
-                                >
-                                  {msg.attachment_name ?? "ملف"}
-                                </a>
-                              ) : null}
+                              ) : (
+                                <MessageMedia msg={msg} mine={mine} />
+                              )}
                             </div>
                             <div className="mt-1 flex gap-1">
                               <button
@@ -609,8 +635,12 @@ export function RoomView({ slug }: { slug: string }) {
             >
               <div className="mx-auto flex max-w-3xl flex-col gap-2">
                 {attachment ? (
-                  <div className="flex items-center justify-between rounded-md border border-border bg-elevated px-3 py-2 text-xs">
+                  <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-elevated px-3 py-2 text-xs">
                     <span className="truncate">{attachment.name}</span>
+                    <label className="flex shrink-0 items-center gap-1 text-[11px] text-muted">
+                      <input type="checkbox" checked={viewOnce} onChange={(e) => setViewOnce(e.target.checked)} />
+                      مرة واحدة
+                    </label>
                     <button type="button" onClick={() => setAttachment(null)} aria-label="إزالة المرفق">
                       <X className="size-3.5" />
                     </button>
@@ -688,6 +718,12 @@ export function RoomView({ slug }: { slug: string }) {
                     }}
                   />
                 </label>
+                <VoiceNoteButton
+                  disabled={sending}
+                  onReady={(file) => {
+                    setAttachment(file);
+                  }}
+                />
                 <Textarea
                   value={draft}
                   onChange={(e) => onDraft(e.target.value)}

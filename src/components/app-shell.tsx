@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Hash, House, MessageCircle, Sparkles, UserRound, Users } from "lucide-react";
+import { Hash, House, MessageCircle, Sparkles, UserRound, Users, Gamepad2, Tv } from "lucide-react";
 import { AccountMenu } from "@/components/account-menu";
 import { BrandMark } from "@/components/brand-mark";
 import { InstallPrompt } from "@/components/install-prompt";
@@ -25,7 +25,7 @@ export function AppShell({
   children,
   sidebar,
 }: {
-  active: "rooms" | "messages" | "friends" | "me" | "chat" | "stories" | "tools" | "feed";
+  active: "rooms" | "messages" | "friends" | "me" | "chat" | "stories" | "tools" | "feed" | "broadcast";
   children: ReactNode;
   sidebar?: ReactNode;
 }) {
@@ -44,6 +44,12 @@ export function AppShell({
             <BrandMark size="sm" />
           </Link>
           <div className="flex items-center gap-1">
+            <Link to="/tools" className="grid size-9 place-items-center rounded-md text-muted hover:bg-elevated hover:text-fg" aria-label="الألعاب">
+              <Gamepad2 className="size-4" />
+            </Link>
+            <Link to="/broadcast" className="grid size-9 place-items-center rounded-md text-muted hover:bg-elevated hover:text-fg" aria-label="تلفاز وراديو">
+              <Tv className="size-4" />
+            </Link>
             <NotificationBell />
             <AccountMenu />
           </div>
@@ -86,6 +92,12 @@ export function AppShell({
           </Link>
           <div className="flex items-center gap-1">
             <InstallPrompt compact />
+            <Link to="/tools" className="grid size-9 place-items-center rounded-md text-muted hover:bg-elevated hover:text-fg" aria-label="الألعاب">
+              <Gamepad2 className="size-4" />
+            </Link>
+            <Link to="/broadcast" className="grid size-9 place-items-center rounded-md text-muted hover:bg-elevated hover:text-fg" aria-label="تلفاز وراديو">
+              <Tv className="size-4" />
+            </Link>
             <NotificationBell />
             <AccountMenu />
           </div>
