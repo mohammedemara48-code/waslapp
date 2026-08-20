@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { VAPID_PUBLIC_KEY } from "@/lib/push/keys";
 import { savePushSubscription } from "@/lib/push/server";
 
@@ -46,6 +47,13 @@ export async function subscribeWebPush(): Promise<boolean> {
   }
 }
 
+/** Only if the user already allowed OS notifications — never prompts. */
+export function syncPushIfAllowed() {
+  if (typeof window === "undefined" || !("Notification" in window)) return;
+  if (Notification.permission === "granted") void subscribeWebPush();
+}
+
+/** Prompts only when the user taps «تفعيل تنبيهات الجهاز». */
 export async function enableBrowserNotifications(): Promise<boolean> {
   if (typeof window === "undefined" || !("Notification" in window)) return false;
   if (Notification.permission === "denied") return false;
@@ -84,6 +92,7 @@ export function playMessageSound() {
   }
 }
 
+/** In-app alert: always. OS lock-screen push: only if already allowed AND app hidden. */
 export function announceNotification(input: { title: string; body: string; href?: string | null }) {
   if (typeof window === "undefined") return;
   playMessageSound();
@@ -92,15 +101,15 @@ export function announceNotification(input: { title: string; body: string; href?
   } catch {
     /* ignore */
   }
-  const payload = { type: "notify", title: input.title, body: input.body, href: input.href ?? "/" };
-  if (navigator.serviceWorker?.controller) {
-    navigator.serviceWorker.controller.postMessage(payload);
-    return;
-  }
-  if ("Notification" in window && Notification.permission === "granted") {
-    new Notification(input.title, {
+  toast(input.title, { description: input.body, duration: 4500 });
+  const hidden = typeof document !== "undefined" && document.hidden;
+  const allowed = "Notification" in window && Notification.permission === "granted";
+  if (hidden && allowed && navigator.serviceWorker?.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: "notify",
+      title: input.title,
       body: input.body,
-      icon: "/icon-192.png",
+      href: input.href ?? "/",
     });
   }
 }

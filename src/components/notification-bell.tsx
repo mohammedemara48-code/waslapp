@@ -25,10 +25,6 @@ export function NotificationBell() {
   const unread = items.filter((n) => !n.read).length;
 
   useEffect(() => {
-    void enableBrowserNotifications();
-  }, []);
-
-  useEffect(() => {
     if (!items.length) return;
     const newest = items[0]!;
     if (seen.current === 0) {
@@ -52,7 +48,6 @@ export function NotificationBell() {
           size="icon"
           className="relative"
           aria-label="الإشعارات"
-          onClick={() => void enableBrowserNotifications()}
         >
           <Bell className="size-4" />
           {unread > 0 ? (
