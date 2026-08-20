@@ -10,30 +10,26 @@ import { SudokuGame } from "@/components/sudoku-game";
 import { ChessGame } from "@/components/chess-game";
 import { Button } from "@/components/ui/button";
 
-const CHANNELS = [
-  { name: "الجزيرة", href: "https://www.youtube.com/@aljazeera/live" },
-  { name: "الجزيرة مباشر", href: "https://www.youtube.com/@aljazeeramubasher/live" },
-  { name: "العربية", href: "https://www.youtube.com/@AlArabiya/live" },
-  { name: "العربية حدث", href: "https://www.youtube.com/@AlArabiyaPrograms/live" },
-  { name: "سكاي نيوز عربية", href: "https://www.youtube.com/@skynewsarabia/live" },
-  { name: "فرانس 24 عربي", href: "https://www.youtube.com/@France24_ar/live" },
-  { name: "DW عربية", href: "https://www.youtube.com/@deutschewellearabic/live" },
-  { name: "BBC عربي", href: "https://www.youtube.com/@bbcarabic/live" },
-  { name: "النيل للأخبار", href: "https://www.youtube.com/@NileNews/live" },
+const EGYPT_TV = [
+  { name: "إكسترا نيوز", channel: "UC65F33K2cXk9hGDbOQYhTOw" },
+  { name: "النيل للأخبار", channel: "UCqNEIF-M6df1pAth2pUVFdQ" },
+  { name: "ON", channel: "UCZghOmDezc6OCMzdPaL-j2Q" },
+  { name: "DMC", channel: "UCEeFa7t5I0fqpcLGF-36TEw" },
+  { name: "TEN", channel: "UChrHIeTNFl00eIUW4KdJBcw" },
+  { name: "القناة الأولى", channel: "UCU2EMBWN2XnA4r3kha-EdJQ" },
 ];
 
-const RADIO = [
+const EGYPT_RADIO = [
+  { name: "الراديو 9090", src: "https://9090streaming.mobtada.com/9090FMEGYPT" },
   { name: "إذاعة القرآن الكريم", src: "https://backup.qurango.net/radio/tarateel" },
-  { name: "إذاعة مصر (البرنامج العام)", href: "https://www.radio.net/s/egyptgeneral" },
-  { name: "مونت كارلو الدولية", href: "https://www.mc-doualiya.com/direct" },
-  { name: "BBC World Service", src: "https://stream.live.vc.bbcmedia.co.uk/bbc_world_service" },
-  { name: "راديو سوا", href: "https://www.radiosawa.com/" },
 ];
 
 export function ToolsPage() {
   const friends = useQuery({ queryKey: ["friends"], queryFn: () => listFriends() });
   const stats = useQuery({ queryKey: ["my-points"], queryFn: () => getMyPoints() });
   const [tab, setTab] = useState<"games" | "tv" | "radio">("games");
+  const [tv, setTv] = useState(EGYPT_TV[0]!.channel);
+  const [radio, setRadio] = useState(EGYPT_RADIO[0]!.src);
   const points = stats.data?.points ?? 0;
 
   return (
@@ -106,34 +102,40 @@ export function ToolsPage() {
           </>
         ) : tab === "tv" ? (
           <section className="space-y-3">
-            <p className="text-sm text-muted">قنوات للمشاهدة في نافذة جديدة. البث من يوتيوب وقد يختلف حسب البلد.</p>
-            {CHANNELS.map((ch) => (
-              <a
-                key={ch.name}
-                href={ch.href}
-                target="_blank"
-                rel="noreferrer"
-                className="block rounded-xl border border-border bg-surface px-4 py-3 text-sm hover:bg-elevated"
-              >
-                {ch.name}
-              </a>
-            ))}
+            <p className="text-sm text-muted">قنوات مصرية تشتغل جوّه التطبيق (بث يوتيوب المباشر). لو قناة مش على الهواء هتظهر فارغة — جرّب غيرها.</p>
+            <div className="flex flex-wrap gap-1.5">
+              {EGYPT_TV.map((ch) => (
+                <Button key={ch.channel} size="sm" variant={tv === ch.channel ? "default" : "secondary"} onClick={() => setTv(ch.channel)}>
+                  {ch.name}
+                </Button>
+              ))}
+            </div>
+            <div className="overflow-hidden rounded-xl border border-border bg-elevated">
+              <iframe
+                key={tv}
+                title="بث مباشر"
+                className="aspect-video w-full"
+                src={`https://www.youtube-nocookie.com/embed/live_stream?channel=${tv}&rel=0`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
+            </div>
           </section>
         ) : (
           <section className="space-y-3">
-            <p className="text-sm text-muted">محطات للسماع داخل التطبيق أو عبر الرابط.</p>
-            {RADIO.map((st) => (
-              <div key={st.name} className="rounded-xl border border-border bg-surface px-4 py-3">
-                <p className="text-sm">{st.name}</p>
-                {"src" in st && st.src ? (
-                  <audio className="mt-2 w-full" controls preload="none" src={st.src} />
-                ) : "href" in st && st.href ? (
-                  <a className="mt-2 inline-block text-xs text-accent" href={st.href} target="_blank" rel="noreferrer">
-                    فتح المحطة
-                  </a>
-                ) : null}
-              </div>
-            ))}
+            <p className="text-sm text-muted">محطات مصرية تشتغل مباشرة من هنا.</p>
+            <div className="flex flex-wrap gap-1.5">
+              {EGYPT_RADIO.map((st) => (
+                <Button key={st.src} size="sm" variant={radio === st.src ? "default" : "secondary"} onClick={() => setRadio(st.src)}>
+                  {st.name}
+                </Button>
+              ))}
+            </div>
+            <div className="rounded-xl border border-border bg-surface px-4 py-3">
+              <p className="mb-2 text-sm">{EGYPT_RADIO.find((s) => s.src === radio)?.name}</p>
+              <audio key={radio} className="w-full" controls preload="none" src={radio} />
+            </div>
           </section>
         )}
       </div>
