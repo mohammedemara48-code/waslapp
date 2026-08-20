@@ -111,7 +111,7 @@ export function StoriesPage() {
         {grouped.length === 0 && !feed.isPending ? (
           <div className="rounded-xl border border-dashed border-border px-6 py-16 text-center">
             <p className="font-display text-2xl">لا قصص بعد</p>
-            <p className="mt-2 text-sm text-muted">انشر سطراً أو صورة أو مقطعاً يراه أصدقاؤك اليوم فقط.</p>
+            <p className="mt-2 text-sm text-muted">انشر سطراً أو صورة أو مقطعاً حتى 15 ثانية يراه أصدقاؤك اليوم فقط.</p>
           </div>
         ) : null}
 
@@ -175,6 +175,7 @@ export function StoriesPage() {
                 const file = e.target.files?.[0];
                 if (!file) return;
                 if (kind === "video") {
+                  toast.message("جارٍ تجهيز المقطع… حتى 15 ثانية");
                   void fileToAttachment(file).then((a) => setImage(a.data)).catch((err) => toast.error(err.message));
                 } else {
                   void compressImage(file, 720, 0.8).then(setImage).catch((err) => toast.error(err.message));
