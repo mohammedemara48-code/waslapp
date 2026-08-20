@@ -8,7 +8,7 @@ export type Move = Sq & { toR: number; toC: number; promo?: PieceType; castle?: 
 export const CHESS_LEVELS = [
   { id: "easy" as const, label: "سهل", depth: 1, reward: 20 },
   { id: "medium" as const, label: "متوسط", depth: 2, reward: 35 },
-  { id: "hard" as const, label: "صعب", depth: 3, reward: 55 },
+  { id: "hard" as const, label: "صعب", depth: 2, reward: 55 },
 ];
 
 const GLYPH: Record<Side, Record<PieceType, string>> = {
@@ -241,8 +241,27 @@ function evaluate(board: Board, side: Side) {
   return score;
 }
 
-function minimax(board: Board, side: Side, depth: number, alpha: number, beta: number, ai: Side): number {
-  const moves = legalMoves(board, side);
+function orderMoves(board: Board, moves: Move[]) {
+  return moves
+    .map((m) => {
+      const cap = board[m.toR]![m.toC];
+      return { m, s: cap ? VAL[cap.t] * 10 - VAL[board[m.r]![m.c]?.t ?? "p"] : 0 };
+    })
+    .sort((a, b) => b.s - a.s)
+    .map((x) => x.m);
+}
+
+function minimax(
+  board: Board,
+  side: Side,
+  depth: number,
+  alpha: number,
+  beta: number,
+  ai: Side,
+  budget: { n: number },
+): number {
+  if (budget.n-- <= 0) return evaluate(board, ai);
+  const moves = orderMoves(board, legalMoves(board, side));
   if (depth === 0 || moves.length === 0) {
     if (moves.length === 0) {
       if (inCheck(board, side)) return side === ai ? -50000 - depth : 50000 + depth;
@@ -253,7 +272,7 @@ function minimax(board: Board, side: Side, depth: number, alpha: number, beta: n
   if (side === ai) {
     let best = -1e9;
     for (const m of moves) {
-      const val = minimax(applyMove(board, m), side === "w" ? "b" : "w", depth - 1, alpha, beta, ai);
+      const val = minimax(applyMove(board, m), side === "w" ? "b" : "w", depth - 1, alpha, beta, ai, budget);
       if (val > best) best = val;
       if (best > alpha) alpha = best;
       if (beta <= alpha) break;
@@ -262,7 +281,7 @@ function minimax(board: Board, side: Side, depth: number, alpha: number, beta: n
   }
   let best = 1e9;
   for (const m of moves) {
-    const val = minimax(applyMove(board, m), side === "w" ? "b" : "w", depth - 1, alpha, beta, ai);
+    const val = minimax(applyMove(board, m), side === "w" ? "b" : "w", depth - 1, alpha, beta, ai, budget);
     if (val < best) best = val;
     if (best < beta) beta = best;
     if (beta <= alpha) break;
@@ -271,20 +290,39 @@ function minimax(board: Board, side: Side, depth: number, alpha: number, beta: n
 }
 
 export function botMove(board: Board, side: Side, depth: number): Move | null {
-  const moves = legalMoves(board, side);
+  const moves = orderMoves(board, legalMoves(board, side));
   if (!moves.length) return null;
+  const budget = { n: depth <= 1 ? 400 : 1200 };
   let best = moves[0]!;
   let bestScore = -1e9;
   for (const m of moves) {
-    const val = minimax(applyMove(board, m), side === "w" ? "b" : "w", Math.max(0, depth - 1), -1e9, 1e9, side);
-    const jitter = (Math.abs(m.r * 9 + m.c + m.toR * 3 + m.toC) % 7) - 3;
+    const val = minimax(applyMove(board, m), side === "w" ? "b" : "w", Math.max(0, depth - 1), -1e9, 1e9, side, budget);
+    const jitter = (m.r + m.c + m.toR + m.toC) % 5;
     const score = val + jitter;
     if (score > bestScore) {
       bestScore = score;
       best = m;
     }
+    if (budget.n <= 0) break;
   }
   return best;
+}
+
+export function capturedBy(board: Board, taker: Side): Piece[] {
+  const start: Record<PieceType, number> = { p: 8, n: 2, b: 2, r: 2, q: 1, k: 1 };
+  const victim: Side = taker === "w" ? "b" : "w";
+  const left: Record<PieceType, number> = { p: 0, n: 0, b: 0, r: 0, q: 0, k: 0 };
+  for (const row of board) {
+    for (const p of row) {
+      if (p && p.s === victim) left[p.t] += 1;
+    }
+  }
+  const out: Piece[] = [];
+  (["q", "r", "b", "n", "p"] as PieceType[]).forEach((t) => {
+    const n = start[t] - left[t];
+    for (let i = 0; i < n; i++) out.push({ s: victim, t });
+  });
+  return out;
 }
 
 export function outcome(board: Board, side: Side): "checkmate" | "stalemate" | "check" | null {

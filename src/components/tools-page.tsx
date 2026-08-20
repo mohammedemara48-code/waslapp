@@ -12,15 +12,28 @@ import { Button } from "@/components/ui/button";
 
 const CHANNELS = [
   { name: "الجزيرة", href: "https://www.youtube.com/@aljazeera/live" },
+  { name: "الجزيرة مباشر", href: "https://www.youtube.com/@aljazeeramubasher/live" },
   { name: "العربية", href: "https://www.youtube.com/@AlArabiya/live" },
+  { name: "العربية حدث", href: "https://www.youtube.com/@AlArabiyaPrograms/live" },
+  { name: "سكاي نيوز عربية", href: "https://www.youtube.com/@skynewsarabia/live" },
+  { name: "فرانس 24 عربي", href: "https://www.youtube.com/@France24_ar/live" },
+  { name: "DW عربية", href: "https://www.youtube.com/@deutschewellearabic/live" },
   { name: "BBC عربي", href: "https://www.youtube.com/@bbcarabic/live" },
-  { name: "موسيقى هادئة", href: "https://www.youtube.com/results?search_query=lofi+radio" },
+  { name: "النيل للأخبار", href: "https://www.youtube.com/@NileNews/live" },
+];
+
+const RADIO = [
+  { name: "إذاعة القرآن الكريم", src: "https://backup.qurango.net/radio/tarateel" },
+  { name: "إذاعة مصر (البرنامج العام)", href: "https://www.radio.net/s/egyptgeneral" },
+  { name: "مونت كارلو الدولية", href: "https://www.mc-doualiya.com/direct" },
+  { name: "BBC World Service", src: "https://stream.live.vc.bbcmedia.co.uk/bbc_world_service" },
+  { name: "راديو سوا", href: "https://www.radiosawa.com/" },
 ];
 
 export function ToolsPage() {
   const friends = useQuery({ queryKey: ["friends"], queryFn: () => listFriends() });
   const stats = useQuery({ queryKey: ["my-points"], queryFn: () => getMyPoints() });
-  const [tab, setTab] = useState<"games" | "tv">("games");
+  const [tab, setTab] = useState<"games" | "tv" | "radio">("games");
   const points = stats.data?.points ?? 0;
 
   return (
@@ -46,12 +59,15 @@ export function ToolsPage() {
           </ul>
         </section>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button size="sm" variant={tab === "games" ? "default" : "secondary"} onClick={() => setTab("games")}>
             الألعاب
           </Button>
           <Button size="sm" variant={tab === "tv" ? "default" : "secondary"} onClick={() => setTab("tv")}>
             التلفاز
+          </Button>
+          <Button size="sm" variant={tab === "radio" ? "default" : "secondary"} onClick={() => setTab("radio")}>
+            الراديو
           </Button>
         </div>
 
@@ -88,9 +104,9 @@ export function ToolsPage() {
               )}
             </section>
           </>
-        ) : (
+        ) : tab === "tv" ? (
           <section className="space-y-3">
-            <p className="text-sm text-muted">قنوات للمشاهدة في نافذة جديدة. البث يعتمد على يوتيوب.</p>
+            <p className="text-sm text-muted">قنوات للمشاهدة في نافذة جديدة. البث من يوتيوب وقد يختلف حسب البلد.</p>
             {CHANNELS.map((ch) => (
               <a
                 key={ch.name}
@@ -101,6 +117,22 @@ export function ToolsPage() {
               >
                 {ch.name}
               </a>
+            ))}
+          </section>
+        ) : (
+          <section className="space-y-3">
+            <p className="text-sm text-muted">محطات للسماع داخل التطبيق أو عبر الرابط.</p>
+            {RADIO.map((st) => (
+              <div key={st.name} className="rounded-xl border border-border bg-surface px-4 py-3">
+                <p className="text-sm">{st.name}</p>
+                {"src" in st && st.src ? (
+                  <audio className="mt-2 w-full" controls preload="none" src={st.src} />
+                ) : "href" in st && st.href ? (
+                  <a className="mt-2 inline-block text-xs text-accent" href={st.href} target="_blank" rel="noreferrer">
+                    فتح المحطة
+                  </a>
+                ) : null}
+              </div>
             ))}
           </section>
         )}

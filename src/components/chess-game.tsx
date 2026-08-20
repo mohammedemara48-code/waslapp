@@ -6,6 +6,7 @@ import { publishPost } from "@/lib/feed/server";
 import {
   applyMove,
   botMove,
+  capturedBy,
   CHESS_LEVELS,
   glyph,
   legalMoves,
@@ -20,12 +21,22 @@ import { cn } from "@/lib/utils";
 
 type Level = (typeof CHESS_LEVELS)[number]["id"];
 
+function Captures({ board, taker, label }: { board: Board; taker: "w" | "b"; label: string }) {
+  const items = capturedBy(board, taker);
+  return (
+    <p className="min-h-6 text-xs text-muted">
+      {label}: {items.length ? items.map((p, i) => <span key={i}>{glyph(p)}</span>) : "—"}
+    </p>
+  );
+}
+
 export function ChessGame() {
   const queryClient = useQueryClient();
   const [level, setLevel] = useState<Level>("easy");
   const [board, setBoard] = useState<Board>(() => startBoard());
   const [turn, setTurn] = useState<"w" | "b">("w");
   const [sel, setSel] = useState<Sq | null>(null);
+  const [last, setLast] = useState<Move | null>(null);
   const [busy, setBusy] = useState(false);
   const [paid, setPaid] = useState(false);
   const status = outcome(board, turn);
@@ -43,13 +54,14 @@ export function ChessGame() {
     setBoard(startBoard());
     setTurn("w");
     setSel(null);
+    setLast(null);
     setBusy(false);
     setPaid(false);
   }
 
   function play(m: Move) {
-    const next = applyMove(board, m);
-    setBoard(next);
+    setBoard(applyMove(board, m));
+    setLast(m);
     setSel(null);
     setTurn("b");
   }
@@ -61,10 +73,13 @@ export function ChessGame() {
       const move = botMove(board, "b", depth);
       if (move) {
         setBoard(applyMove(board, move));
+        setLast(move);
+        setTurn("w");
+      } else {
         setTurn("w");
       }
       setBusy(false);
-    }, 280);
+    }, 40);
     return () => window.clearTimeout(t);
   }, [turn, board, depth, over]);
 
@@ -120,6 +135,7 @@ export function ChessGame() {
           </Button>
         ))}
       </div>
+      <Captures board={board} taker="b" label="أخذها البوت" />
       <p className="mb-2 text-xs text-muted">
         أنت الأبيض. {busy ? "البوت يفكر…" : lost ? "كش مات — البوت فاز" : won ? "كش مات — فزت" : status === "stalemate" ? "تعادل" : status === "check" && turn === "w" ? "كش عليك" : "دورك"}
       </p>
@@ -129,23 +145,31 @@ export function ChessGame() {
             const dark = (r + c) % 2 === 1;
             const on = sel?.r === r && sel?.c === c;
             const mark = dests.some((m) => m.toR === r && m.toC === c);
+            const from = last && last.r === r && last.c === c;
+            const to = last && last.toR === r && last.toC === c;
             return (
               <button
                 key={`${r}-${c}`}
                 type="button"
                 onClick={() => onSquare(r, c)}
                 className={cn(
-                  "grid min-h-10 place-items-center text-lg",
+                  "relative grid min-h-10 place-items-center text-lg",
                   dark ? "bg-elevated" : "bg-bg",
                   on && "bg-accent/30",
+                  (from || to) && "bg-accent/25",
                   mark && "ring-1 ring-inset ring-accent",
                 )}
               >
+                {from ? <span className="absolute size-1.5 rounded-full bg-accent" /> : null}
+                {to ? <span className="absolute bottom-1 left-1 size-2 rounded-full bg-accent" /> : null}
                 {p ? glyph(p) : mark ? "·" : ""}
               </button>
             );
           }),
         )}
+      </div>
+      <div className="mx-auto mt-2 max-w-sm">
+        <Captures board={board} taker="w" label="أخذتها أنت" />
       </div>
       {won ? (
         <div className="mt-3 flex flex-wrap gap-2">
