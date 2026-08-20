@@ -16,7 +16,9 @@ import { useCurrentUser } from "@/lib/auth/use-current-user";
 import { cn, fileToAttachment, formatClock, formatDay, initials, peerIdFromUser } from "@/lib/utils";
 import { NotificationBell } from "@/components/notification-bell";
 import { AccountMenu } from "@/components/account-menu";
-import { BrandMark } from "@/components/brand-mark";
+import { WaslMenu } from "@/components/wasl-menu";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useI18n } from "@/lib/i18n";
 import { CallStage } from "@/components/call-stage";
 import { MessageMedia } from "@/components/message-media";
 import { VoiceNoteButton } from "@/components/voice-note-button";
@@ -55,6 +57,7 @@ function mergeMessages(current: MessageRow[], incoming: MessageRow[]): MessageRo
 }
 
 export function RoomView({ slug }: { slug: string }) {
+  const { t } = useI18n();
   const user = useCurrentUser();
   const queryClient = useQueryClient();
   const [tabId] = useState(() => Math.random().toString(36).slice(2, 6));
@@ -415,9 +418,7 @@ export function RoomView({ slug }: { slug: string }) {
     <div className="flex min-h-dvh bg-bg text-fg">
       <aside className="hidden w-72 shrink-0 flex-col border-l border-border bg-surface p-4 lg:flex">
         <div className="mb-5 flex items-center justify-between">
-          <Link to="/" className="outline-none">
-            <BrandMark size="sm" />
-          </Link>
+          <WaslMenu size="sm" />
           <AccountMenu />
         </div>
         <RoomList
@@ -444,7 +445,7 @@ export function RoomView({ slug }: { slug: string }) {
             <input
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              placeholder="بحث"
+              placeholder={t.search}
               className="h-9 w-28 rounded-md border border-border bg-elevated pe-2 ps-7 text-xs"
             />
           </label>
@@ -455,14 +456,15 @@ export function RoomView({ slug }: { slug: string }) {
             <Link to="/broadcast" className="grid size-9 place-items-center rounded-md text-muted hover:bg-elevated hover:text-fg" aria-label="تلفاز وراديو">
               <Tv className="size-4" />
             </Link>
+            <LanguageSwitcher />
             <NotificationBell />
             <Button variant="secondary" size="sm" onClick={() => void startCall("audio")} disabled={callKind !== null}>
               <Mic className="size-4" />
-              <span className="hidden sm:inline">صوت</span>
+              <span className="hidden sm:inline">{t.call_audio}</span>
             </Button>
             <Button variant="secondary" size="sm" onClick={() => void startCall("video")} disabled={callKind !== null}>
               <Video className="size-4" />
-              <span className="hidden sm:inline">فيديو</span>
+              <span className="hidden sm:inline">{t.call_video}</span>
             </Button>
             <Button variant="ghost" size="icon" className="xl:hidden" onClick={() => setPeopleOpen(true)}>
               <Users />

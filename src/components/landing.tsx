@@ -5,8 +5,10 @@ import { emailToPhone, phoneToEmail } from "@/lib/utils";
 import { listSavedAccounts } from "@/lib/accounts";
 import { BrandMark } from "@/components/brand-mark";
 import { InstallPrompt } from "@/components/install-prompt";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/lib/i18n";
 
 function GoogleMark() {
   return (
@@ -35,6 +37,7 @@ function GoogleMark() {
 }
 
 export function Landing() {
+  const { t } = useI18n();
   const publicHost = typeof window !== "undefined" && onPublicDeploy();
   const [mode, setMode] = useState<"google" | "phone">(publicHost ? "phone" : "google");
   const [tab, setTab] = useState<"in" | "up">("up");
@@ -54,7 +57,7 @@ export function Landing() {
     try {
       await signIn(providerId, { callbackURL: "/", errorCallbackURL: "/login" });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "تعذر تسجيل الدخول");
+      setError(err instanceof Error ? err.message : t.error_login);
       setBusy(null);
     }
   }
@@ -65,7 +68,7 @@ export function Landing() {
       setMode("phone");
       setTab("in");
       setPhone(localPhone);
-      setError("أدخل كلمة السر ثم اضغط دخول");
+      setError(t.enter_password);
       return;
     }
     void start(google?.providerId ?? "google");
@@ -121,22 +124,16 @@ export function Landing() {
         <header className="flex items-center justify-between gap-3">
           <BrandMark />
           <div className="flex items-center gap-2">
-            <p className="hidden text-xs tracking-wide text-subtle sm:block">غرفة خاصة للصوت والصورة والكلمة</p>
+            <LanguageSwitcher />
             <InstallPrompt compact />
           </div>
         </header>
 
         <section className="grid items-end gap-12 py-12 md:grid-cols-[1.15fr_0.85fr] md:gap-16">
           <div className="space-y-6">
-            <p className="text-sm text-accent">تواصل مباشر، بلا ضجيج</p>
-            <h1 className="font-display text-4xl leading-[1.15] text-fg md:text-6xl">
-              غرف هادئة
-              <br />
-              لصوت أوضح
-            </h1>
-            <p className="max-w-md text-base text-muted">
-              ادخل بجوجل أو برقم جوالك، أضف أصدقاء، انشر قصة، وأرسل هدية داخل غرفة هادئة.
-            </p>
+            <p className="text-sm text-accent">{t.landing_kicker}</p>
+            <h1 className="font-display text-4xl leading-[1.15] text-fg md:text-6xl">{t.landing_title}</h1>
+            <p className="max-w-md text-base text-muted">{t.landing_sub}</p>
           </div>
 
           <div className="rounded-xl border border-border bg-surface p-6">
@@ -146,21 +143,21 @@ export function Landing() {
                 className={`h-9 rounded-md text-sm ${mode === "google" ? "bg-surface text-fg" : "text-muted"}`}
                 onClick={() => setMode("google")}
               >
-                جوجل
+                {t.google_tab}
               </button>
               <button
                 type="button"
                 className={`h-9 rounded-md text-sm ${mode === "phone" ? "bg-surface text-fg" : "text-muted"}`}
                 onClick={() => setMode("phone")}
               >
-                رقم الجوال
+                {t.login_phone}
               </button>
             </div>
 
             {mode === "google" ? (
               <>
-                <h2 className="mb-1 text-base font-medium">ابدأ من هنا</h2>
-                <p className="mb-5 text-sm text-muted">أسرع دخول عبر حساب جوجل.</p>
+                <h2 className="mb-1 text-base font-medium">{t.start_here}</h2>
+                <p className="mb-5 text-sm text-muted">{t.google_fast}</p>
                 {authEnabled && google ? (
                   <Button
                     className="w-full"
@@ -169,7 +166,7 @@ export function Landing() {
                     onClick={() => void start(google.providerId)}
                   >
                     <GoogleMark />
-                    {busy === google.providerId ? "جارٍ الفتح…" : "المتابعة عبر جوجل"}
+                    {busy === google.providerId ? t.opening : t.login_google}
                   </Button>
                 ) : (
                   <p className="text-sm text-muted">تسجيل الدخول غير متاح حالياً.</p>
@@ -191,7 +188,7 @@ export function Landing() {
                 ) : null}
                 {saved.length > 0 ? (
                   <div className="mt-4 space-y-2">
-                    <p className="text-xs text-subtle">حسابات محفوظة على هذا الجهاز</p>
+                    <p className="text-xs text-subtle">{t.saved_accounts}</p>
                     {saved.map((a) => (
                       <Button
                         key={a.email}
@@ -217,7 +214,7 @@ export function Landing() {
                     className={tab === "up" ? "text-fg" : "text-muted"}
                     onClick={() => setTab("up")}
                   >
-                    حساب جديد
+                    {t.new_account}
                   </button>
                   <span className="text-subtle">/</span>
                   <button
@@ -225,14 +222,14 @@ export function Landing() {
                     className={tab === "in" ? "text-fg" : "text-muted"}
                     onClick={() => setTab("in")}
                   >
-                    دخول
+                    {t.signin}
                   </button>
                 </div>
                 <p className="text-xs leading-relaxed text-subtle">
                   إرسال رمز SMS غير متاح على هذه المنصة. يُنشأ الحساب مباشرة برقم الجوال واسم المستخدم وكلمة السر، ويُحفظ الرقم في ملفك.
                 </p>
                 <label className="block space-y-1.5">
-                  <span className="text-xs text-muted">رقم الجوال</span>
+                  <span className="text-xs text-muted">{t.phone}</span>
                   <Input
                     inputMode="tel"
                     autoComplete="tel"
@@ -245,7 +242,7 @@ export function Landing() {
                 {tab === "up" ? (
                   <>
                     <label className="block space-y-1.5">
-                      <span className="text-xs text-muted">اسم المستخدم</span>
+                      <span className="text-xs text-muted">{t.username}</span>
                       <Input
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
@@ -256,7 +253,7 @@ export function Landing() {
                       />
                     </label>
                     <label className="block space-y-1.5">
-                      <span className="text-xs text-muted">الاسم المستعار</span>
+                      <span className="text-xs text-muted">{t.nickname}</span>
                       <Input
                         value={nickname}
                         onChange={(e) => setNickname(e.target.value)}
@@ -267,7 +264,7 @@ export function Landing() {
                   </>
                 ) : null}
                 <label className="block space-y-1.5">
-                  <span className="text-xs text-muted">كلمة السر</span>
+                  <span className="text-xs text-muted">{t.password}</span>
                   <Input
                     type="password"
                     autoComplete={tab === "up" ? "new-password" : "current-password"}
@@ -278,11 +275,11 @@ export function Landing() {
                   />
                 </label>
                 <Button type="submit" className="w-full" disabled={busy !== null}>
-                  {busy === "phone" ? "جارٍ الحفظ…" : tab === "up" ? "إنشاء الحساب" : "دخول"}
+                  {busy === "phone" ? t.saving : tab === "up" ? t.create_account : t.signin}
                 </Button>
                 {saved.length > 0 ? (
                   <div className="space-y-2 pt-2">
-                    <p className="text-xs text-subtle">حسابات محفوظة على هذا الجهاز</p>
+                    <p className="text-xs text-subtle">{t.saved_accounts}</p>
                     {saved.map((a) => (
                       <Button
                         key={a.email}

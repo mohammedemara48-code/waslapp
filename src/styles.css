@@ -23,8 +23,8 @@
   --radius-xl: 24px;
   --radius-2xl: 32px;
 
-  --font-display: "Amiri", "Noto Naskh Arabic", serif;
-  --font-sans: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --font-display: "Cairo", "IBM Plex Sans Arabic", "Noto Naskh Arabic", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans Arabic", "IBM Plex Sans", "Noto Nastaliq Urdu", "Segoe UI", system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   --text-xs: 0.75rem;
@@ -56,7 +56,8 @@
 
   body {
     font-family: var(--font-sans);
-    line-height: 1.55;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
   }
 
   h1,

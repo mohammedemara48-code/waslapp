@@ -1,6 +1,8 @@
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 export function BrandMark({ className, size = "md" }: { className?: string; size?: "sm" | "md" | "lg" }) {
+  const { t } = useI18n();
   return (
     <div className={cn("flex items-center gap-2.5", className)}>
       <svg
@@ -20,13 +22,13 @@ export function BrandMark({ className, size = "md" }: { className?: string; size
       </svg>
       <span
         className={cn(
-          "font-display leading-none text-fg",
+          "font-display font-semibold leading-none tracking-tight text-fg",
           size === "sm" && "text-xl",
           size === "md" && "text-2xl",
           size === "lg" && "text-4xl",
         )}
       >
-        وصل
+        {t.brand}
       </span>
     </div>
   );

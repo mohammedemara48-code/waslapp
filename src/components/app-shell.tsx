@@ -3,22 +3,15 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Hash, House, MessageCircle, Sparkles, UserRound, Users, Gamepad2, Tv } from "lucide-react";
 import { AccountMenu } from "@/components/account-menu";
-import { BrandMark } from "@/components/brand-mark";
 import { InstallPrompt } from "@/components/install-prompt";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { MembersRail } from "@/components/members-rail";
 import { NotificationBell } from "@/components/notification-bell";
+import { WaslMenu } from "@/components/wasl-menu";
 import { CountDot } from "@/components/inbox-badge";
 import { getInboxCounts } from "@/lib/engage/server";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-
-const NAV = [
-  { to: "/", label: "الرئيسية", icon: House, key: "feed" },
-  { to: "/rooms", label: "الغرف", icon: Hash, key: "rooms" },
-  { to: "/messages", label: "الخاصة", icon: MessageCircle, key: "messages" },
-  { to: "/stories", label: "القصص", icon: Sparkles, key: "stories" },
-  { to: "/friends", label: "الأصدقاء", icon: Users, key: "friends" },
-  { to: "/me", label: "حسابي", icon: UserRound, key: "me" },
-] as const;
 
 export function AppShell({
   active,
@@ -29,6 +22,7 @@ export function AppShell({
   children: ReactNode;
   sidebar?: ReactNode;
 }) {
+  const { t } = useI18n();
   const current = active === "chat" ? "rooms" : active;
   const counts = useQuery({
     queryKey: ["inbox"],
@@ -36,23 +30,44 @@ export function AppShell({
     refetchInterval: 8000,
   });
   const dms = counts.data?.dms ?? 0;
+
+  const NAV = [
+    { to: "/", label: t.nav_home, icon: House, key: "feed" },
+    { to: "/rooms", label: t.nav_rooms, icon: Hash, key: "rooms" },
+    { to: "/messages", label: t.nav_messages, icon: MessageCircle, key: "messages" },
+    { to: "/stories", label: t.nav_stories, icon: Sparkles, key: "stories" },
+    { to: "/friends", label: t.nav_friends, icon: Users, key: "friends" },
+    { to: "/me", label: t.nav_me, icon: UserRound, key: "me" },
+  ] as const;
+
+  const headerActions = (
+    <div className="flex items-center gap-1">
+      <Link
+        to="/tools"
+        className="grid size-9 place-items-center rounded-md text-muted hover:bg-elevated hover:text-fg"
+        aria-label={t.nav_games}
+      >
+        <Gamepad2 className="size-4" />
+      </Link>
+      <Link
+        to="/broadcast"
+        className="grid size-9 place-items-center rounded-md text-muted hover:bg-elevated hover:text-fg"
+        aria-label={t.nav_broadcast}
+      >
+        <Tv className="size-4" />
+      </Link>
+      <LanguageSwitcher />
+      <NotificationBell />
+      <AccountMenu />
+    </div>
+  );
+
   return (
     <div className="flex min-h-dvh bg-bg text-fg">
       <aside className="hidden w-72 shrink-0 flex-col border-l border-border bg-surface lg:flex">
         <div className="flex items-center justify-between px-4 py-4">
-          <Link to="/" className="outline-none">
-            <BrandMark size="sm" />
-          </Link>
-          <div className="flex items-center gap-1">
-            <Link to="/tools" className="grid size-9 place-items-center rounded-md text-muted hover:bg-elevated hover:text-fg" aria-label="الألعاب">
-              <Gamepad2 className="size-4" />
-            </Link>
-            <Link to="/broadcast" className="grid size-9 place-items-center rounded-md text-muted hover:bg-elevated hover:text-fg" aria-label="تلفاز وراديو">
-              <Tv className="size-4" />
-            </Link>
-            <NotificationBell />
-            <AccountMenu />
-          </div>
+          <WaslMenu size="sm" />
+          {headerActions}
         </div>
         <nav className="grid gap-1 px-3">
           {NAV.map((item) => {
@@ -87,19 +102,10 @@ export function AppShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-border px-4 py-3 lg:hidden">
-          <Link to="/">
-            <BrandMark size="sm" />
-          </Link>
+          <WaslMenu size="sm" />
           <div className="flex items-center gap-1">
             <InstallPrompt compact />
-            <Link to="/tools" className="grid size-9 place-items-center rounded-md text-muted hover:bg-elevated hover:text-fg" aria-label="الألعاب">
-              <Gamepad2 className="size-4" />
-            </Link>
-            <Link to="/broadcast" className="grid size-9 place-items-center rounded-md text-muted hover:bg-elevated hover:text-fg" aria-label="تلفاز وراديو">
-              <Tv className="size-4" />
-            </Link>
-            <NotificationBell />
-            <AccountMenu />
+            {headerActions}
           </div>
         </header>
         <div className="min-h-0 flex-1 overflow-auto">{children}</div>

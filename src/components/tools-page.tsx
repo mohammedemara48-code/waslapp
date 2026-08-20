@@ -10,8 +10,10 @@ import { SudokuGame } from "@/components/sudoku-game";
 import { ChessGame } from "@/components/chess-game";
 import { MemoryGame } from "@/components/memory-game";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 
 export function ToolsPage() {
+  const { t } = useI18n();
   const friends = useQuery({ queryKey: ["friends"], queryFn: () => listFriends() });
   const stats = useQuery({ queryKey: ["my-points"], queryFn: () => getMyPoints() });
   const [game, setGame] = useState<"sudoku" | "chess" | "memory">("sudoku");
@@ -22,11 +24,11 @@ export function ToolsPage() {
       <div className="mx-auto w-full max-w-2xl space-y-8 px-5 py-8">
         <div>
           <p className="text-sm text-accent">العب واجمع نقاط</p>
-          <h1 className="mt-1 font-display text-3xl">الألعاب</h1>
+          <h1 className="mt-1 font-display text-3xl">{t.games_title}</h1>
         </div>
 
         <section className="rounded-xl border border-border bg-surface p-4">
-          <p className="text-sm text-muted">رصيدك</p>
+          <p className="text-sm text-muted">{t.tools_points}</p>
           <p className="font-display text-3xl">{points} نقطة</p>
           <p className="mt-1 text-sm">
             شارتك: <NameBadge role={stats.data?.role} points={points} />

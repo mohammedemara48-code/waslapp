@@ -4,8 +4,10 @@ import { MessageCircle } from "lucide-react";
 import { listDirects } from "@/lib/social/server";
 import { AppShell } from "@/components/app-shell";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useI18n } from "@/lib/i18n";
 
 export function MessagesPage() {
+  const { t } = useI18n();
   const dms = useQuery({
     queryKey: ["dms"],
     queryFn: () => listDirects(),
@@ -16,7 +18,7 @@ export function MessagesPage() {
     <AppShell active="messages">
       <div className="mx-auto w-full max-w-2xl px-5 py-8">
         <p className="text-sm text-accent">بينك وبين أصدقائك فقط</p>
-        <h1 className="mt-1 font-display text-3xl">المحادثات الخاصة</h1>
+        <h1 className="mt-1 font-display text-3xl">{t.messages_title}</h1>
         <p className="mt-3 max-w-lg text-sm text-muted">
           أضف صديقاً أولاً ثم اضغط محادثة. داخل الخاصة: رسائل، صور وملفات، وصوت أو فيديو.
         </p>

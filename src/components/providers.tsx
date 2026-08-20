@@ -5,6 +5,7 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { ensureProfile } from "@/lib/social/server";
 import { rememberAccount } from "@/lib/accounts";
 import { registerServiceWorker, syncPushIfAllowed } from "@/lib/pwa";
+import { I18nProvider, useI18n } from "@/lib/i18n";
 import { RadioProvider } from "@/lib/radio";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { RadioDock } from "@/components/radio-dock";
@@ -13,9 +14,10 @@ import { Toaster } from "sonner";
 
 function ProfileSync() {
   const { user, isPending } = useCurrentUserState();
+  const { t } = useI18n();
   useEffect(() => {
     if (isPending || !user) return;
-    rememberAccount(user.displayName ?? "حساب", user.primaryEmail);
+    rememberAccount(user.displayName ?? t.account, user.primaryEmail);
     syncPushIfAllowed();
     void ensureProfile({
       data: {
@@ -24,7 +26,7 @@ function ProfileSync() {
         avatarUrl: user.profileImageUrl,
       },
     }).catch(() => {});
-  }, [isPending, user]);
+  }, [isPending, user, t.account]);
   return null;
 }
 
@@ -33,6 +35,20 @@ function PwaBoot() {
     registerServiceWorker();
   }, []);
   return null;
+}
+
+function DirAwareToaster() {
+  const { dir } = useI18n();
+  return (
+    <Toaster
+      theme="dark"
+      dir={dir}
+      position="top-center"
+      toastOptions={{
+        className: "font-sans",
+      }}
+    />
+  );
 }
 
 export function AppProviders({ children }: { children: ReactNode }) {
@@ -46,25 +62,20 @@ export function AppProviders({ children }: { children: ReactNode }) {
   );
   return (
     <QueryClientProvider client={client}>
-      <AuthProvider>
-        <TooltipProvider delayDuration={200}>
-          <RadioProvider>
-            <PwaBoot />
-            <ProfileSync />
-            <PresenceHeartbeat />
-            {children}
-            <RadioDock />
-            <Toaster
-              theme="dark"
-              dir="rtl"
-              position="top-center"
-              toastOptions={{
-                className: "font-sans",
-              }}
-            />
-          </RadioProvider>
-        </TooltipProvider>
-      </AuthProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <TooltipProvider delayDuration={200}>
+            <RadioProvider>
+              <PwaBoot />
+              <ProfileSync />
+              <PresenceHeartbeat />
+              {children}
+              <RadioDock />
+              <DirAwareToaster />
+            </RadioProvider>
+          </TooltipProvider>
+        </AuthProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }

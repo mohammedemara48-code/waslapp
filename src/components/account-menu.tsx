@@ -13,8 +13,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { initials } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 export function AccountMenu() {
+  const { t } = useI18n();
   const { user, isPending } = useCurrentUserState();
   const role = useQuery({
     queryKey: ["my-role"],
@@ -25,7 +27,7 @@ export function AccountMenu() {
     return <div className="size-9 animate-pulse rounded-full bg-elevated" />;
   }
   if (!user) return null;
-  const label = user.displayName ?? user.primaryEmail ?? "حساب";
+  const label = user.displayName ?? user.primaryEmail ?? t.account;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -49,32 +51,32 @@ export function AccountMenu() {
         <DropdownMenuItem asChild>
           <Link to="/me">
             <UserRound className="size-4" />
-            ملفي
+            {t.profile}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/tools">
             <Gamepad2 className="size-4" />
-            الألعاب
+            {t.nav_games}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/broadcast">
             <Tv className="size-4" />
-            تلفاز وراديو
+            {t.nav_broadcast}
           </Link>
         </DropdownMenuItem>
         {role.data?.role === "owner" || role.data?.role === "admin" ? (
           <DropdownMenuItem asChild>
             <Link to="/admin">
               <Shield className="size-4" />
-              إدارة التطبيق
+              {t.nav_admin}
             </Link>
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuItem onSelect={() => void signOut("/login")}>
           <LogOut className="size-4" />
-          خروج
+          {t.logout}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

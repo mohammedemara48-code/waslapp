@@ -3,8 +3,10 @@ import { NEWS_TV, RADIO_STATIONS } from "@/lib/broadcast";
 import { useRadio } from "@/lib/radio";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 
 export function BroadcastPage() {
+  const { t } = useI18n();
   const radio = useRadio();
   const [tab, setTab] = useState<"tv" | "radio">("tv");
   const [tv, setTv] = useState(NEWS_TV[0]!.channel);
@@ -14,14 +16,14 @@ export function BroadcastPage() {
       <div className="mx-auto w-full max-w-2xl space-y-6 px-5 py-8">
         <div>
           <p className="text-sm text-accent">بث مباشر داخل وصل</p>
-          <h1 className="mt-1 font-display text-3xl">التلفاز والراديو</h1>
+          <h1 className="mt-1 font-display text-3xl">{t.broadcast_title}</h1>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant={tab === "tv" ? "default" : "secondary"} onClick={() => setTab("tv")}>
-            التلفاز
+            {t.tv}
           </Button>
           <Button size="sm" variant={tab === "radio" ? "default" : "secondary"} onClick={() => setTab("radio")}>
-            الراديو
+            {t.radio}
           </Button>
         </div>
 
