@@ -4,7 +4,10 @@ import { AppProviders } from "@/components/providers";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "وصل";
+const APP_DESC =
+  "وصل تطبيق تواصل عربي: غرف دردشة، رسائل خاصة، مكالمات صوت وفيديو، قصص ومنشورات. ثبّته على هاتفك.";
 const host = import.meta.env.VITE_PUBLIC_HOSTNAME;
+const siteUrl = host ? `https://${host}` : "https://waslapp-sigma.vercel.app";
 const ogImage = host ? `https://${host}/og.jpg` : undefined;
 const xBanner = host
   ? `https://og.grok.me/v1/banner.png?host=${encodeURIComponent(host)}&title=${encodeURIComponent(APP_NAME)}&color=E8C36A`
@@ -15,14 +18,20 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: APP_NAME },
-      { name: "description", content: "تواصل عربي: غرف، أصدقاء، رسائل خاصة، صوت وفيديو. قابل للتثبيت." },
+      { title: "وصل — تطبيق تواصل عربي للدردشة والغرف" },
+      { name: "description", content: APP_DESC },
+      { name: "robots", content: "index,follow" },
+      { name: "googlebot", content: "index,follow" },
+      { name: "keywords", content: "وصل, تطبيق دردشة, شات عربي, غرف صوت, مكالمة فيديو, wasl" },
       { name: "apple-mobile-web-app-title", content: APP_NAME },
       { name: "theme-color", content: "#08090b" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
-      { property: "og:title", content: APP_NAME },
-      { property: "og:description", content: "تواصل صوتي ومرئي ونصي في غرف هادئة." },
+      { property: "og:locale", content: "ar_AR" },
+      { property: "og:url", content: siteUrl },
+      { property: "og:site_name", content: APP_NAME },
+      { property: "og:title", content: "وصل — تطبيق تواصل عربي" },
+      { property: "og:description", content: APP_DESC },
       ...(ogImage
         ? [
             { property: "og:image", content: ogImage },
@@ -39,6 +48,7 @@ export const Route = createRootRoute({
         : []),
     ],
     links: [
+      { rel: "canonical", href: `${siteUrl}/` },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "apple-touch-icon", href: "/icon-180.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },

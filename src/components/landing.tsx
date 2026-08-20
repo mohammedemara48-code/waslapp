@@ -132,8 +132,14 @@ export function Landing() {
         <section className="grid items-end gap-12 py-12 md:grid-cols-[1.15fr_0.85fr] md:gap-16">
           <div className="space-y-6">
             <p className="text-sm text-accent">{t.landing_kicker}</p>
-            <h1 className="font-display text-4xl leading-[1.15] text-fg md:text-6xl">{t.landing_title}</h1>
+            <h1 className="font-display text-4xl leading-[1.15] text-fg md:text-6xl">{t.seo_h1}</h1>
+            <p className="max-w-md text-base text-muted">{t.landing_title}</p>
             <p className="max-w-md text-base text-muted">{t.landing_sub}</p>
+            <ul className="max-w-md space-y-1 text-sm text-muted">
+              <li>غرف دردشة عربية صوت وفيديو</li>
+              <li>رسائل خاصة وقصص ومنشورات</li>
+              <li>أضف أصدقاء برقم وصل وثبّت التطبيق على هاتفك</li>
+            </ul>
           </div>
 
           <div className="rounded-xl border border-border bg-surface p-6">
@@ -305,7 +311,26 @@ export function Landing() {
           <span>أصدقاء باسم المستخدم</span>
           <span>صوت وفيديو ومرفقات</span>
           <span>قابل للتثبيت على الجهاز</span>
+          <a href="/about" className="text-accent hover:underline">{t.about}</a>
+          <a href="/privacy" className="text-accent hover:underline">{t.privacy}</a>
+          <a href="/terms" className="text-accent hover:underline">{t.terms}</a>
         </footer>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              name: "وصل",
+              applicationCategory: "SocialNetworkingApplication",
+              operatingSystem: "Web, Android, iOS",
+              inLanguage: "ar",
+              description: "تطبيق تواصل عربي: غرف، رسائل خاصة، صوت وفيديو، قصص ومنشورات.",
+              url: "https://waslapp-sigma.vercel.app/",
+              offers: { "@type": "Offer", price: "0", priceCurrency: "EGP" },
+            }),
+          }}
+        />
       </div>
     </main>
   );

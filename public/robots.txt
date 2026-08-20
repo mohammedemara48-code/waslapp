@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /about
+Allow: /privacy
+Allow: /terms
+Allow: /login
+Disallow: /admin
+Disallow: /me
+Disallow: /messages
+Disallow: /friends
+Disallow: /r/
+Disallow: /u/
+Disallow: /api/
+
+Sitemap: https://waslapp-sigma.vercel.app/sitemap.xml

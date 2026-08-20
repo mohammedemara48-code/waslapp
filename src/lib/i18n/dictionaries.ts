@@ -146,6 +146,10 @@ export const dictionaries: Record<Locale, Dict> = {
     voice_note: "رسالة صوتية",
     slide_cancel: "اسحب للإلغاء",
     release_send: "اترك للإرسال",
+    seo_h1: "وصل — تطبيق تواصل عربي",
+    about: "عن وصل",
+    privacy: "سياسة الخصوصية",
+    terms: "شروط الاستخدام",
   },
   en: {
     brand: "Wasl",
@@ -284,6 +288,10 @@ export const dictionaries: Record<Locale, Dict> = {
     voice_note: "Voice message",
     slide_cancel: "Slide to cancel",
     release_send: "Release to send",
+    seo_h1: "Wasl — Arabic chat and rooms",
+    about: "About Wasl",
+    privacy: "Privacy",
+    terms: "Terms",
   },
   ur: {
     brand: "وصل",
@@ -422,5 +430,9 @@ export const dictionaries: Record<Locale, Dict> = {
     voice_note: "صوتی پیغام",
     slide_cancel: "منسوخ کے لیے سلائیڈ",
     release_send: "بھیجنے کے لیے چھوڑیں",
+    seo_h1: "وصل — عربی چیٹ اور رومز",
+    about: "وصل کے بارے میں",
+    privacy: "رازداری",
+    terms: "شرائط",
   },
 };

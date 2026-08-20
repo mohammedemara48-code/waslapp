@@ -10,15 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as BroadcastRouteImport } from './routes/broadcast'
 import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as StoriesRouteImport } from './routes/stories'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as ApiRtcRouteImport } from './routes/api/rtc'
 import { Route as NNoRouteImport } from './routes/n/$no'
@@ -32,6 +35,11 @@ import { Route as ApiMediaSignRouteImport } from './routes/api/media/sign'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -64,6 +72,11 @@ const MessagesRoute = MessagesRouteImport.update({
   path: '/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RoomsRoute = RoomsRouteImport.update({
   id: '/rooms',
   path: '/rooms',
@@ -77,6 +90,11 @@ const SavedRoute = SavedRouteImport.update({
 const StoriesRoute = StoriesRouteImport.update({
   id: '/stories',
   path: '/stories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ToolsRoute = ToolsRouteImport.update({
@@ -127,15 +145,18 @@ const ApiMediaSignRoute = ApiMediaSignRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/broadcast': typeof BroadcastRoute
   '/friends': typeof FriendsRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
   '/messages': typeof MessagesRoute
+  '/privacy': typeof PrivacyRoute
   '/rooms': typeof RoomsRoute
   '/saved': typeof SavedRoute
   '/stories': typeof StoriesRoute
+  '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/api/rtc': typeof ApiRtcRoute
   '/n/$no': typeof NNoRoute
@@ -148,15 +169,18 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/broadcast': typeof BroadcastRoute
   '/friends': typeof FriendsRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
   '/messages': typeof MessagesRoute
+  '/privacy': typeof PrivacyRoute
   '/rooms': typeof RoomsRoute
   '/saved': typeof SavedRoute
   '/stories': typeof StoriesRoute
+  '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/api/rtc': typeof ApiRtcRoute
   '/n/$no': typeof NNoRoute
@@ -170,15 +194,18 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/broadcast': typeof BroadcastRoute
   '/friends': typeof FriendsRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
   '/messages': typeof MessagesRoute
+  '/privacy': typeof PrivacyRoute
   '/rooms': typeof RoomsRoute
   '/saved': typeof SavedRoute
   '/stories': typeof StoriesRoute
+  '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/api/rtc': typeof ApiRtcRoute
   '/n/$no': typeof NNoRoute
@@ -193,15 +220,18 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/admin'
     | '/broadcast'
     | '/friends'
     | '/login'
     | '/me'
     | '/messages'
+    | '/privacy'
     | '/rooms'
     | '/saved'
     | '/stories'
+    | '/terms'
     | '/tools'
     | '/api/rtc'
     | '/n/$no'
@@ -214,15 +244,18 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/admin'
     | '/broadcast'
     | '/friends'
     | '/login'
     | '/me'
     | '/messages'
+    | '/privacy'
     | '/rooms'
     | '/saved'
     | '/stories'
+    | '/terms'
     | '/tools'
     | '/api/rtc'
     | '/n/$no'
@@ -235,15 +268,18 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/admin'
     | '/broadcast'
     | '/friends'
     | '/login'
     | '/me'
     | '/messages'
+    | '/privacy'
     | '/rooms'
     | '/saved'
     | '/stories'
+    | '/terms'
     | '/tools'
     | '/api/rtc'
     | '/n/$no'
@@ -257,15 +293,18 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
   BroadcastRoute: typeof BroadcastRoute
   FriendsRoute: typeof FriendsRoute
   LoginRoute: typeof LoginRoute
   MeRoute: typeof MeRoute
   MessagesRoute: typeof MessagesRoute
+  PrivacyRoute: typeof PrivacyRoute
   RoomsRoute: typeof RoomsRoute
   SavedRoute: typeof SavedRoute
   StoriesRoute: typeof StoriesRoute
+  TermsRoute: typeof TermsRoute
   ToolsRoute: typeof ToolsRoute
   ApiRtcRoute: typeof ApiRtcRoute
   NNoRoute: typeof NNoRoute
@@ -284,6 +323,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -328,6 +374,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rooms': {
       id: '/rooms'
       path: '/rooms'
@@ -347,6 +400,13 @@ declare module '@tanstack/react-router' {
       path: '/stories'
       fullPath: '/stories'
       preLoaderRoute: typeof StoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tools': {
@@ -417,15 +477,18 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
   BroadcastRoute: BroadcastRoute,
   FriendsRoute: FriendsRoute,
   LoginRoute: LoginRoute,
   MeRoute: MeRoute,
   MessagesRoute: MessagesRoute,
+  PrivacyRoute: PrivacyRoute,
   RoomsRoute: RoomsRoute,
   SavedRoute: SavedRoute,
   StoriesRoute: StoriesRoute,
+  TermsRoute: TermsRoute,
   ToolsRoute: ToolsRoute,
   ApiRtcRoute: ApiRtcRoute,
   NNoRoute: NNoRoute,
