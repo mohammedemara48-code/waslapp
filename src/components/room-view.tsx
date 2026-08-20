@@ -21,6 +21,7 @@ import { WaslMenu } from "@/components/wasl-menu";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useI18n } from "@/lib/i18n";
 import { CallStage } from "@/components/call-stage";
+import { IncomingCallScreen } from "@/components/incoming-call-screen";
 import { CallInviteBar } from "@/components/call-invite-bar";
 import { MessageMedia } from "@/components/message-media";
 import { VoiceNoteButton } from "@/components/voice-note-button";
@@ -49,7 +50,8 @@ type WireChat = {
 
 type WireTyping = { type: "typing"; name: string };
 type WireCall = { type: "call"; kind: "audio" | "video"; name: string };
-type WireCallEnd = { type: "call-end"; reason?: "reject" | "hangup" };
+type WireCallAccept = { type: "call-accept"; kind: "audio" | "video"; name: string };
+type WireCallEnd = { type: "call-end"; reason?: "reject" | "hangup" | "no-answer" };
 
 function mergeMessages(current: MessageRow[], incoming: MessageRow[]): MessageRow[] {
   const map = new Map<number, MessageRow>();
@@ -97,6 +99,7 @@ export function RoomView({ slug }: { slug: string }) {
   const [roomsOpen, setRoomsOpen] = useState(false);
   const [peopleOpen, setPeopleOpen] = useState(false);
   const [callKind, setCallKind] = useState<"audio" | "video" | null>(null);
+  const [callMode, setCallMode] = useState<"ring" | "answer" | null>(null);
   const [incoming, setIncoming] = useState<{ kind: "audio" | "video"; name: string } | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [muted, setMuted] = useState(false);
@@ -140,7 +143,7 @@ export function RoomView({ slug }: { slug: string }) {
   useEffect(() => {
     return p2p.onMessage((_from, data) => {
       if (!data || typeof data !== "object") return;
-      const msg = data as WireChat | WireTyping | WireCall | WireCallEnd;
+      const msg = data as WireChat | WireTyping | WireCall | WireCallAccept | WireCallEnd;
       if (msg.type === "chat") {
         const row: MessageRow = {
           id: msg.id,
@@ -162,8 +165,11 @@ export function RoomView({ slug }: { slug: string }) {
         if (typingTimer.current) clearTimeout(typingTimer.current);
         typingTimer.current = setTimeout(() => setTypingName(null), 1800);
       } else if (msg.type === "call") {
+        if (callKindRef.current) return;
         setIncoming({ kind: msg.kind, name: msg.name });
-        startCallTone("in");
+      } else if (msg.type === "call-accept") {
+        setIncoming(null);
+        stopCallTone();
       } else if (msg.type === "call-end") {
         setIncoming(null);
         stopCallTone();
@@ -200,25 +206,32 @@ export function RoomView({ slug }: { slug: string }) {
     };
   }, [localStream]);
 
-  async function startCall(kind: "audio" | "video") {
+  async function startCall(kind: "audio" | "video", mode: "ring" | "answer" = "ring") {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         video: kind === "video",
       });
+      setIncoming(null);
+      stopCallTone();
       setLocalStream(stream);
       setMuted(false);
       setCameraOn(kind === "video");
       setCallKind(kind);
-      p2p.send({ type: "call", kind, name: displayName });
-      void notifyPeers({
-        data: {
-          slug,
-          kind: "call",
-          title: kind === "video" ? "مكالمة فيديو" : "مكالمة صوتية",
-          body: `${displayName} بدأ مكالمة`,
-        },
-      }).catch(() => {});
+      setCallMode(mode);
+      if (mode === "answer") {
+        p2p.send({ type: "call-accept", kind, name: displayName });
+      } else {
+        p2p.send({ type: "call", kind, name: displayName });
+        void notifyPeers({
+          data: {
+            slug,
+            kind: "call",
+            title: kind === "video" ? "مكالمة فيديو" : "مكالمة صوتية",
+            body: `${displayName} بدأ مكالمة`,
+          },
+        }).catch(() => {});
+      }
     } catch {
       toast.error("تعذر الوصول إلى الميكروفون أو الكاميرا. تحقق من الإذن ثم أعد المحاولة.");
     }
@@ -236,7 +249,7 @@ export function RoomView({ slug }: { slug: string }) {
     }
     if (!pending) return;
     pendingApplied.current = true;
-    if (pending.answer || pending.ring) void startCall(pending.kind);
+    if (pending.answer || pending.ring) void startCall(pending.kind, pending.answer ? "answer" : "ring");
     else {
       setIncoming({ kind: pending.kind, name: "" });
       startCallTone("in");
@@ -249,6 +262,7 @@ export function RoomView({ slug }: { slug: string }) {
     localStream?.getTracks().forEach((t) => t.stop());
     setLocalStream(null);
     setCallKind(null);
+    setCallMode(null);
     setCameraOn(false);
     setMuted(false);
     setIncoming(null);
@@ -268,6 +282,22 @@ export function RoomView({ slug }: { slug: string }) {
         .catch(() => {});
     }
   }
+
+  useEffect(() => {
+    if (!incoming || callKind) return;
+    const t = window.setTimeout(() => {
+      const kind = incoming.kind;
+      setIncoming(null);
+      stopCallTone();
+      p2p.send({ type: "call-end", reason: "no-answer" });
+      void sendCallEvent({ data: { slug, kind, status: "no-answer" } })
+        .then((saved) => {
+          queryClient.setQueryData<MessageRow[]>(["messages", slug], (prev) => mergeMessages(prev ?? [], [saved]));
+        })
+        .catch(() => {});
+    }, 40000);
+    return () => window.clearTimeout(t);
+  }, [incoming, callKind, p2p, slug, queryClient]);
 
   useEffect(() => {
     if (!callKind || media.remotes.length > 0) return;
@@ -498,40 +528,26 @@ export function RoomView({ slug }: { slug: string }) {
         <div className="flex min-h-0 flex-1">
           <div className="flex min-w-0 flex-1 flex-col">
             {incoming && !callKind ? (
-              <div className="border-b border-border-strong bg-surface p-4">
-                <p className="text-sm">
-                  مكالمة {incoming.kind === "video" ? "فيديو" : "صوت"} من {incoming.name}
-                </p>
-                <div className="mt-3 flex gap-2">
-                  <Button
-                    onClick={() => {
-                      stopCallTone();
-                      setIncoming(null);
-                      void startCall(incoming.kind);
-                    }}
-                  >
-                    رد
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      const kind = incoming.kind;
-                      setIncoming(null);
-                      stopCallTone();
-                      p2p.send({ type: "call-end", reason: "reject" });
-                      void sendCallEvent({ data: { slug, kind, status: "rejected" } })
-                        .then((saved) => {
-                          queryClient.setQueryData<MessageRow[]>(["messages", slug], (prev) =>
-                            mergeMessages(prev ?? [], [saved]),
-                          );
-                        })
-                        .catch(() => {});
-                    }}
-                  >
-                    رفض
-                  </Button>
-                </div>
-              </div>
+              <IncomingCallScreen
+                name={incoming.name}
+                kind={incoming.kind}
+                onAccept={() => {
+                  void startCall(incoming.kind, "answer");
+                }}
+                onReject={() => {
+                  const kind = incoming.kind;
+                  setIncoming(null);
+                  stopCallTone();
+                  p2p.send({ type: "call-end", reason: "reject" });
+                  void sendCallEvent({ data: { slug, kind, status: "rejected" } })
+                    .then((saved) => {
+                      queryClient.setQueryData<MessageRow[]>(["messages", slug], (prev) =>
+                        mergeMessages(prev ?? [], [saved]),
+                      );
+                    })
+                    .catch(() => {});
+                }}
+              />
             ) : null}
             {callKind ? (
               <div className="border-b border-border p-3 md:p-4">
@@ -544,6 +560,7 @@ export function RoomView({ slug }: { slug: string }) {
                   onToggleMute={toggleMute}
                   onToggleCamera={() => void toggleCamera()}
                   onHangup={hangup}
+                  ringOut={callMode !== "answer"}
                 />
                 <CallInviteBar slug={slug} kind={callKind} />
               </div>
@@ -747,42 +764,8 @@ export function RoomView({ slug }: { slug: string }) {
                 </Button>
                 <label className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-elevated text-muted hover:text-fg">
                   <ImagePlus className="size-4" />
-                  <span className="sr-only">صورة</span>
-                  <input type="file" accept="image/*" className="sr-only"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      e.target.value = "";
-                      if (!file) return;
-                      void fileToAttachment(file)
-                        .then((att) => {
-                          setAttachment(att);
-                          setViewOnce(false);
-                        })
-                        .catch((err) => toast.error(err instanceof Error ? err.message : "تعذر الإرفاق"));
-                    }}
-                  />
-                </label>
-                <label className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-elevated text-muted hover:text-fg">
-                  <Video className="size-4" />
-                  <span className="sr-only">فيديو</span>
-                  <input type="file" accept="video/*" className="sr-only"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      e.target.value = "";
-                      if (!file) return;
-                      void fileToAttachment(file)
-                        .then((att) => {
-                          setAttachment(att);
-                          setViewOnce(false);
-                        })
-                        .catch((err) => toast.error(err instanceof Error ? err.message : "تعذر الإرفاق"));
-                    }}
-                  />
-                </label>
-                <label className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-elevated text-muted hover:text-fg">
-                  <Paperclip className="size-4" />
-                  <span className="sr-only">ملف</span>
-                  <input type="file" className="sr-only"
+                  <span className="sr-only">{t.image}</span>
+                  <input type="file" accept="image/*,video/*,audio/*" className="sr-only"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       e.target.value = "";

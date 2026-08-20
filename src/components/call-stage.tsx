@@ -74,6 +74,7 @@ export function CallStage({
   onToggleMute,
   onToggleCamera,
   onHangup,
+  ringOut = true,
 }: {
   kind: "audio" | "video";
   localStream: MediaStream | null;
@@ -83,9 +84,10 @@ export function CallStage({
   onToggleMute: () => void;
   onToggleCamera: () => void;
   onHangup: () => void;
+  ringOut?: boolean;
 }) {
   const [fx, setFx] = useState("none");
-  const [mode, setMode] = useState<"dock" | "full" | "mini">(kind === "video" ? "full" : "dock");
+  const [mode, setMode] = useState<"dock" | "full" | "mini">("full");
   const remoteVideo = useRef<HTMLVideoElement>(null);
   const connected = remotes.length > 0;
   const { t } = useI18n();
@@ -95,9 +97,13 @@ export function CallStage({
       stopCallTone();
       return;
     }
+    if (!ringOut) {
+      stopCallTone();
+      return;
+    }
     startCallTone("out");
     return () => stopCallTone();
-  }, [connected]);
+  }, [connected, ringOut]);
 
   useEffect(() => {
     function onHide() {
