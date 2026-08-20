@@ -14,6 +14,7 @@ import {
   stopStoryMusic,
 } from "@/lib/story-style";
 import { AppShell } from "@/components/app-shell";
+import { MediaVideo } from "@/components/media-video";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -253,13 +254,9 @@ export function StoriesPage() {
                 </p>
               </div>
               {active.kind === "video" && active.image_data ? (
-                <video
+                <MediaVideo
                   key={active.id}
                   src={active.image_data}
-                  autoPlay
-                  playsInline
-                  controls
-                  preload="auto"
                   className={cn("mx-auto max-h-72 w-full rounded-lg bg-black", filterClass(packed.filter))}
                   onEnded={() => goStory(1)}
                 />

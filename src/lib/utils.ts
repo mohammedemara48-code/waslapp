@@ -93,83 +93,12 @@ export async function compressImage(file: File, maxDim = 960, quality = 0.82): P
 
 export const VIDEO_MAX_SECONDS = 30;
 
-function pickRecorderMime(): string {
-  if (typeof MediaRecorder === "undefined") return "";
-  const types = [
-    "video/webm;codecs=vp8,opus",
-    "video/webm;codecs=vp8",
-    "video/webm",
-    "video/mp4",
-  ];
-  return types.find((t) => MediaRecorder.isTypeSupported(t)) ?? "";
-}
-
 export async function compressVideo(file: File, maxSeconds = VIDEO_MAX_SECONDS): Promise<string> {
   const original = await readFileAsDataUrl(file);
-  if (original.length <= 3_400_000) return original;
-
-  const url = URL.createObjectURL(file);
-  const video = document.createElement("video");
-  video.muted = true;
-  video.playsInline = true;
-  video.setAttribute("playsinline", "true");
-  video.preload = "auto";
-  video.src = url;
-  try {
-    await new Promise<void>((resolve, reject) => {
-      video.onloadedmetadata = () => resolve();
-      video.onerror = () => reject(new Error("تعذر قراءة الفيديو"));
-    });
-    const mime = pickRecorderMime();
-    const clip = video as HTMLVideoElement & { captureStream?: (fps?: number) => MediaStream };
-    if (!mime || typeof clip.captureStream !== "function") {
-      throw new Error(`المقطع كبير. اختصر لأقل من ${maxSeconds} ثانية`);
-    }
-    await video.play();
-    await new Promise<void>((resolve) => {
-      if (!video.paused && video.readyState >= 2) {
-        resolve();
-        return;
-      }
-      video.addEventListener("playing", () => resolve(), { once: true });
-      window.setTimeout(() => resolve(), 800);
-    });
-    const stream = clip.captureStream(14);
-    const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 280_000, audioBitsPerSecond: 32_000 });
-    const chunks: Blob[] = [];
-    rec.ondataavailable = (e) => {
-      if (e.data.size) chunks.push(e.data);
-    };
-    const stopped = new Promise<Blob>((resolve, reject) => {
-      rec.onstop = () => resolve(new Blob(chunks, { type: rec.mimeType || mime }));
-      rec.onerror = () => reject(new Error("تعذر ضغط الفيديو"));
-    });
-    rec.start(250);
-    await new Promise<void>((resolve) => {
-      const cut = window.setTimeout(() => resolve(), maxSeconds * 1000);
-      video.onended = () => {
-        window.clearTimeout(cut);
-        resolve();
-      };
-    });
-    video.pause();
-    if (rec.state !== "inactive") rec.stop();
-    stream.getTracks().forEach((track) => track.stop());
-    const blob = await stopped;
-    if (blob.size < 4000) {
-      throw new Error("تعذر تجهيز المقطع على هذا الجهاز. جرّب مقطعاً أقصر");
-    }
-    const data = await blobToDataUrl(blob);
-    if (data.length > 3_400_000) {
-      throw new Error(`المقطع ما زال كبيراً بعد الضغط. اختصر لأقل من ${maxSeconds} ثانية`);
-    }
-    return data;
-  } finally {
-    video.pause();
-    video.removeAttribute("src");
-    video.load();
-    URL.revokeObjectURL(url);
+  if (original.length > 4_000_000) {
+    throw new Error(`المقطع كبير للرفع. اختصر لأقل من ${maxSeconds} ثانية أو صوّر بجودة أقل`);
   }
+  return original;
 }
 
 function readFileAsDataUrl(file: File): Promise<string> {
@@ -201,8 +130,7 @@ export async function fileToAttachment(file: File): Promise<{
   }
   if (file.type.startsWith("video/")) {
     const data = await compressVideo(file);
-    const type = data.startsWith("data:video/mp4") ? "video/mp4" : "video/webm";
-    return { name: file.name.replace(/\.[^.]+$/, "") + (type === "video/mp4" ? ".mp4" : ".webm"), type, data };
+    return { name: file.name, type: file.type || "video/mp4", data };
   }
   if (file.size > 1_400_000) throw new Error("الحد الأقصى للمرفق حوالي 1 ميغابايت");
   const data = await readFileAsDataUrl(file);

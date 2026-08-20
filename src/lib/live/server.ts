@@ -323,7 +323,7 @@ export const publishStory = createServerFn({ method: "POST" })
     if (kind === "text" && !body) throw new Error("اكتب سطراً للقصة");
     if (kind === "image" && !imageData) throw new Error("اختر صورة");
     if (kind === "video" && !imageData) throw new Error("اختر مقطعاً");
-    if (imageData && imageData.length > 3_400_000) throw new Error("الملف كبير");
+    if (imageData && imageData.length > 4_000_000) throw new Error("الملف كبير");
     return { kind, body, imageData, tint };
   })
   .handler(async ({ context, data }) => {

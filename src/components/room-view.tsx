@@ -17,6 +17,7 @@ import { NotificationBell } from "@/components/notification-bell";
 import { AccountMenu } from "@/components/account-menu";
 import { BrandMark } from "@/components/brand-mark";
 import { CallStage } from "@/components/call-stage";
+import { MediaVideo } from "@/components/media-video";
 import { startCallTone, stopCallTone } from "@/lib/call-tone";
 import { RoomList } from "@/components/room-list";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -476,10 +477,8 @@ export function RoomView({ slug }: { slug: string }) {
                                 />
                               ) : null}
                               {msg.attachment_data && msg.attachment_type?.startsWith("video/") ? (
-                                <video
+                                <MediaVideo
                                   src={msg.attachment_data}
-                                  controls
-                                  playsInline
                                   className="mt-2 max-h-56 w-full rounded-md"
                                 />
                               ) : null}

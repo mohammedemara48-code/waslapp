@@ -198,7 +198,7 @@ export const sendMessage = createServerFn({ method: "POST" })
     if (body.length > 2000) throw new Error("الرسالة طويلة جداً");
     if (attachment) {
       if (!attachment.name || attachment.name.length > 120) throw new Error("اسم الملف غير صالح");
-      if (attachment.data.length > 3_400_000) throw new Error("المرفق كبير");
+      if (attachment.data.length > 4_000_000) throw new Error("المرفق كبير");
     }
     return { slug, body, attachment };
   })
