@@ -42,7 +42,6 @@ export function ToolsPage() {
                 {r.label} من {r.min} نقطة{rankLabel(points) === r.label ? " — مستواك الآن" : ""}
               </li>
             ))}
-            <li>المالك يظهر بشارة خاصة دائماً.</li>
           </ul>
         </section>
 
