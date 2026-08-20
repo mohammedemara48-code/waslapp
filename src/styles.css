@@ -1,0 +1,98 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --color-bg: #08090b;
+  --color-surface: #12141a;
+  --color-elevated: #1c1f28;
+  --color-fg: #f7f1e4;
+  --color-muted: #b7b0a4;
+  --color-subtle: #7d776c;
+  --color-accent: #e8c36a;
+  --color-accent-fg: #14110c;
+  --color-border: rgb(232 195 106 / 0.16);
+  --color-border-strong: rgb(232 195 106 / 0.38);
+  --color-danger: #d46b58;
+  --color-ok: #7fb89a;
+  --color-ring: #e8c36a;
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+
+  --font-display: "Amiri", "Noto Naskh Arabic", serif;
+  --font-sans: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.75rem;
+  --text-4xl: 3.5rem;
+
+  --shadow-soft: 0 18px 40px rgb(0 0 0 / 0.35);
+  --shadow-glow: 0 0 0 1px rgb(212 196 168 / 0.16), 0 18px 40px rgb(0 0 0 / 0.4);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html,
+  body,
+  #app {
+    min-height: 100%;
+    background: var(--color-bg);
+    color: var(--color-fg);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    line-height: 1.55;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-accent-fg);
+  }
+}
+
+.fx-none { filter: none; }
+.fx-warm { filter: sepia(0.28) saturate(1.2) hue-rotate(-8deg); }
+.fx-cool { filter: saturate(1.05) hue-rotate(18deg) brightness(1.04); }
+.fx-noir { filter: grayscale(1) contrast(1.15); }
+.fx-soft { filter: blur(0.6px) brightness(1.06) saturate(0.9); }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
