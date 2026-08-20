@@ -62,3 +62,14 @@ export const completeChess = createServerFn({ method: "POST" })
     const res = await awardPoints(sql, context.userId, key, amount);
     return { ...res, amount, rank: rankFromPoints(res.points) };
   });
+
+export const completeMemory = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((level: string) => z.enum(["easy", "medium", "hard"]).parse(level))
+  .handler(async ({ context, data: level }) => {
+    const sql = await getSql();
+    const amount = level === "hard" ? 22 : level === "medium" ? 14 : 8;
+    const key = `memory:${level}:${Date.now()}`;
+    const res = await awardPoints(sql, context.userId, key, amount);
+    return { ...res, amount, rank: rankFromPoints(res.points) };
+  });

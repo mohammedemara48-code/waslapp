@@ -1,4 +1,4 @@
-const CACHE = "wasl-shell-v1";
+const CACHE = "wasl-shell-v2";
 const SHELL = ["/", "/favicon.svg", "/icon-192.png", "/icon-512.png", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
@@ -63,7 +63,40 @@ self.addEventListener("message", (event) => {
       dir: "rtl",
       lang: "ar",
       vibrate: [40, 30, 80],
-      tag: "wasl",
+      tag: data.tag || "wasl-" + Date.now(),
+      renotify: true,
+    }),
+  );
+});
+
+self.addEventListener("push", (event) => {
+  let title = "وصل";
+  let body = "إشعار جديد";
+  let href = "/";
+  try {
+    if (event.data) {
+      const json = event.data.json();
+      title = json.title || title;
+      body = json.body || body;
+      href = json.href || href;
+    }
+  } catch {
+    try {
+      body = event.data ? event.data.text() : body;
+    } catch {
+      /* ignore */
+    }
+  }
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      data: { href },
+      dir: "rtl",
+      lang: "ar",
+      vibrate: [40, 30, 80],
+      tag: "wasl-push",
       renotify: true,
     }),
   );

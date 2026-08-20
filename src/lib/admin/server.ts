@@ -158,3 +158,101 @@ export const adminSetBadge = createServerFn({ method: "POST" })
     await sql`update profiles set badge = ${value} where user_id = ${data.userId}`;
     return { ok: true as const };
   });
+
+export const adminListReports = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const sql = await requireOwner(context.userId);
+    return sql<{
+      id: number;
+      reporter_id: string;
+      target_id: string;
+      reason: string;
+      created_at: string;
+      reporter_name: string;
+      target_name: string;
+    }>`
+      select
+        r.id, r.reporter_id, r.target_id, r.reason, r.created_at,
+        coalesce(pr.display_name, 'عضو') as reporter_name,
+        coalesce(pt.display_name, 'عضو') as target_name
+      from reports r
+      left join profiles pr on pr.user_id = r.reporter_id
+      left join profiles pt on pt.user_id = r.target_id
+      order by r.id desc
+      limit 50
+    `;
+  });
+
+export const adminDeletePost = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((id: number) => z.number().int().positive().parse(id))
+  .handler(async ({ context, data: id }) => {
+    const sql = await requireOwner(context.userId);
+    await sql`delete from post_likes where post_id = ${id}`;
+    await sql`delete from post_comments where post_id = ${id}`;
+    const rows = await sql<{ id: number }>`delete from posts where id = ${id} returning id`;
+    if (!rows[0]) throw new Error("المنشور غير موجود");
+    return { ok: true as const };
+  });
+
+export const adminDeleteStory = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((id: number) => z.number().int().positive().parse(id))
+  .handler(async ({ context, data: id }) => {
+    const sql = await requireOwner(context.userId);
+    await sql`delete from story_likes where story_id = ${id}`;
+    await sql`delete from story_views where story_id = ${id}`;
+    const rows = await sql<{ id: number }>`delete from stories where id = ${id} returning id`;
+    if (!rows[0]) throw new Error("القصة غير موجودة");
+    return { ok: true as const };
+  });
+
+export const adminListRecentPosts = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const sql = await requireOwner(context.userId);
+    return sql<{
+      id: number;
+      body: string;
+      kind: string;
+      created_at: string;
+      display_name: string;
+      user_id: string;
+    }>`
+      select p.id, p.body, p.kind, p.created_at, coalesce(pr.display_name, 'عضو') as display_name, p.user_id
+      from posts p
+      left join profiles pr on pr.user_id = p.user_id
+      order by p.id desc
+      limit 30
+    `;
+  });
+
+export const adminListRecentStories = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const sql = await requireOwner(context.userId);
+    return sql<{
+      id: number;
+      body: string;
+      created_at: string;
+      display_name: string;
+      user_id: string;
+    }>`
+      select s.id, s.body, s.created_at, coalesce(pr.display_name, 'عضو') as display_name, s.user_id
+      from stories s
+      left join profiles pr on pr.user_id = s.user_id
+      where s.created_at > now() - interval '48 hours'
+      order by s.id desc
+      limit 30
+    `;
+  });
+
+export const adminDismissReport = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((id: number) => z.number().int().positive().parse(id))
+  .handler(async ({ context, data: id }) => {
+    const sql = await requireOwner(context.userId);
+    await sql`delete from reports where id = ${id}`;
+    return { ok: true as const };
+  });

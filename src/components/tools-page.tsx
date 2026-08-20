@@ -10,6 +10,7 @@ import { AppShell } from "@/components/app-shell";
 import { NameBadge } from "@/components/name-badge";
 import { SudokuGame } from "@/components/sudoku-game";
 import { ChessGame } from "@/components/chess-game";
+import { MemoryGame } from "@/components/memory-game";
 import { Button } from "@/components/ui/button";
 
 export function ToolsPage() {
@@ -59,6 +60,7 @@ export function ToolsPage() {
           <>
             <SudokuGame />
             <ChessGame />
+            <MemoryGame />
             <section className="space-y-2">
               <h2 className="text-sm">ادعُ صديقاً للعب</h2>
               {(friends.data?.friends ?? []).length === 0 ? (

@@ -1,7 +1,21 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { adminBroadcast, adminDeleteRoom, adminListMembers, adminListRooms, adminSetBadge, adminSetRole, getAdminOverview } from "@/lib/admin/server";
+import {
+  adminBroadcast,
+  adminDeletePost,
+  adminDeleteRoom,
+  adminDeleteStory,
+  adminDismissReport,
+  adminListMembers,
+  adminListRecentPosts,
+  adminListRecentStories,
+  adminListReports,
+  adminListRooms,
+  adminSetBadge,
+  adminSetRole,
+  getAdminOverview,
+} from "@/lib/admin/server";
 import { initials } from "@/lib/utils";
 import { AppShell } from "@/components/app-shell";
 import { NameBadge } from "@/components/name-badge";
@@ -15,6 +29,9 @@ export function AdminPage() {
   const overview = useQuery({ queryKey: ["admin-overview"], queryFn: () => getAdminOverview() });
   const members = useQuery({ queryKey: ["admin-members"], queryFn: () => adminListMembers() });
   const rooms = useQuery({ queryKey: ["admin-rooms"], queryFn: () => adminListRooms() });
+  const reports = useQuery({ queryKey: ["admin-reports"], queryFn: () => adminListReports() });
+  const posts = useQuery({ queryKey: ["admin-posts"], queryFn: () => adminListRecentPosts() });
+  const stories = useQuery({ queryKey: ["admin-stories"], queryFn: () => adminListRecentStories() });
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
 
@@ -50,6 +67,98 @@ export function AdminPage() {
             </div>
           ))}
         </div>
+
+        <section className="space-y-2">
+          <h2 className="text-sm">البلاغات</h2>
+          {(reports.data ?? []).length === 0 ? (
+            <p className="text-sm text-muted">لا بلاغات حالياً.</p>
+          ) : (
+            (reports.data ?? []).map((r) => (
+              <div key={r.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-border px-3 py-2.5 text-sm">
+                <div className="min-w-0 flex-1">
+                  <p>
+                    <span className="text-muted">{r.reporter_name}</span> أبلغ عن{" "}
+                    <span>{r.target_name}</span>
+                  </p>
+                  <p className="text-xs text-subtle">{r.reason || "بدون سبب"}</p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() =>
+                    void adminDismissReport({ data: r.id })
+                      .then(() => {
+                        void queryClient.invalidateQueries({ queryKey: ["admin-reports"] });
+                        toast.success("أُغلق البلاغ");
+                      })
+                      .catch((err) => toast.error(err instanceof Error ? err.message : "تعذر"))
+                  }
+                >
+                  تجاهل
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => void setRole(r.target_id, "banned")}>
+                  حظر
+                </Button>
+              </div>
+            ))
+          )}
+        </section>
+
+        <section className="space-y-2">
+          <h2 className="text-sm">آخر المنشورات</h2>
+          {(posts.data ?? []).map((p) => (
+            <div key={p.id} className="flex items-start gap-2 rounded-lg border border-border px-3 py-2 text-sm">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-muted">
+                  {p.display_name} · {p.kind}
+                </p>
+                <p className="truncate">{p.body || "—"}</p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() =>
+                  void adminDeletePost({ data: p.id })
+                    .then(() => {
+                      void queryClient.invalidateQueries({ queryKey: ["admin-posts"] });
+                      void queryClient.invalidateQueries({ queryKey: ["posts"] });
+                      toast.success("حُذف المنشور");
+                    })
+                    .catch((err) => toast.error(err instanceof Error ? err.message : "تعذر الحذف"))
+                }
+              >
+                حذف
+              </Button>
+            </div>
+          ))}
+        </section>
+
+        <section className="space-y-2">
+          <h2 className="text-sm">قصص نشطة</h2>
+          {(stories.data ?? []).map((s) => (
+            <div key={s.id} className="flex items-start gap-2 rounded-lg border border-border px-3 py-2 text-sm">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-muted">{s.display_name}</p>
+                <p className="truncate">{s.body || "قصة وسائط"}</p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() =>
+                  void adminDeleteStory({ data: s.id })
+                    .then(() => {
+                      void queryClient.invalidateQueries({ queryKey: ["admin-stories"] });
+                      void queryClient.invalidateQueries({ queryKey: ["stories"] });
+                      toast.success("حُذفت القصة");
+                    })
+                    .catch((err) => toast.error(err instanceof Error ? err.message : "تعذر الحذف"))
+                }
+              >
+                حذف
+              </Button>
+            </div>
+          ))}
+        </section>
 
         <section className="space-y-3">
           <h2 className="text-sm">إشعار لكل المشتركين</h2>
@@ -88,7 +197,7 @@ export function AdminPage() {
                 </p>
               </div>
               {person.role !== "owner" ? (
-                <div className="flex gap-1">
+                <div className="flex flex-wrap gap-1">
                   <Button size="sm" variant="secondary" onClick={() => void setRole(person.user_id, "admin")}>
                     مشرف
                   </Button>

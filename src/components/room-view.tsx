@@ -20,6 +20,7 @@ import { BrandMark } from "@/components/brand-mark";
 import { CallStage } from "@/components/call-stage";
 import { MediaVideo } from "@/components/media-video";
 import { startCallTone, stopCallTone } from "@/lib/call-tone";
+import { playMessageSound } from "@/lib/pwa";
 import { RoomList } from "@/components/room-list";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -162,6 +163,20 @@ export function RoomView({ slug }: { slug: string }) {
       ? `${m.body} ${m.display_name}`.toLowerCase().includes(filter.trim().toLowerCase())
       : true,
   );
+  const lastMsgId = useRef(0);
+  useEffect(() => {
+    const list = messagesQuery.data ?? [];
+    if (!list.length) return;
+    const last = list[list.length - 1]!;
+    if (lastMsgId.current === 0) {
+      lastMsgId.current = last.id;
+      return;
+    }
+    if (last.id > lastMsgId.current && last.user_id !== user?.id) {
+      playMessageSound();
+    }
+    lastMsgId.current = Math.max(lastMsgId.current, last.id);
+  }, [messagesQuery.data, user?.id]);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length, callKind]);
