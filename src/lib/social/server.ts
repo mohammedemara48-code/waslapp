@@ -28,6 +28,8 @@ function mapProfile(row: {
   online?: boolean | number;
   badge?: string | null;
   wasl_no?: number | null;
+  role?: string | null;
+  points?: number | null;
 }): ProfileRow {
   return {
     user_id: row.user_id,
@@ -41,6 +43,8 @@ function mapProfile(row: {
     online: Boolean(row.online),
     badge: row.badge ?? null,
     wasl_no: row.wasl_no ?? null,
+    role: row.role ?? null,
+    points: row.points ?? 0,
   };
 }
 
@@ -58,8 +62,10 @@ export const getMyProfile = createServerFn({ method: "GET" })
       avatar_url: string | null;
       avatar_data: string | null;
       wasl_no: number | null;
+      role: string | null;
+      points: number | null;
     }>`
-      select user_id, username, display_name, email, phone, bio, avatar_url, avatar_data, wasl_no
+      select user_id, username, display_name, email, phone, bio, avatar_url, avatar_data, wasl_no, role, coalesce(points, 0)::int as points
       from profiles where user_id = ${context.userId} limit 1
     `;
     return rows[0] ? mapProfile(rows[0]) : null;
@@ -218,8 +224,10 @@ export const searchPeople = createServerFn({ method: "GET" })
       avatar_url: string | null;
       avatar_data: string | null;
       wasl_no: number | null;
+      role: string | null;
+      points: number | null;
     }>`
-      select user_id, username, display_name, email, phone, bio, avatar_url, avatar_data, wasl_no
+      select user_id, username, display_name, email, phone, bio, avatar_url, avatar_data, wasl_no, role, coalesce(points, 0)::int as points
       from profiles
       where user_id <> ${context.userId}
         and (
@@ -334,13 +342,15 @@ export const listFriends = createServerFn({ method: "GET" })
       online: boolean;
       badge: string | null;
       wasl_no: number | null;
+      role: string | null;
+      points: number | null;
     }>`
       select
         f.id, f.status, f.created_at, f.requester_id, f.addressee_id,
         p.user_id, p.username, p.display_name, p.email, p.phone, p.bio, p.avatar_url, p.avatar_data,
         p.last_seen,
         (p.last_seen > now() - interval '45 seconds') as online,
-        p.badge, p.wasl_no
+        p.badge, p.wasl_no, p.role, coalesce(p.points, 0)::int as points
       from friendships f
       join profiles p on p.user_id = case
         when f.requester_id = ${context.userId} then f.addressee_id

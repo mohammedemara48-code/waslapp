@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
 import { assertStoredMedia } from "@/lib/media/limits";
+import { awardPoints } from "@/lib/points/server";
 import type { PostCommentRow, PostRow } from "@/lib/chat/types";
 
 function displayAvatar(row: { avatar_data?: string | null; avatar_url?: string | null }): string | null {
@@ -174,10 +175,12 @@ export const publishPost = createServerFn({ method: "POST" })
   })
   .handler(async ({ context, data }) => {
     const sql = await getSql();
-    await sql`
+    const inserted = await sql<{ id: number }>`
       insert into posts (user_id, kind, body, media_data, visibility)
       values (${context.userId}, ${data.kind}, ${data.body}, ${data.mediaData}, ${data.visibility})
+      returning id
     `;
+    await awardPoints(sql, context.userId, `post:${inserted[0]?.id ?? 0}`, 8);
     const friends = await sql<{ user_id: string }>`
       select case when requester_id = ${context.userId} then addressee_id else requester_id end as user_id
       from friendships
@@ -214,6 +217,11 @@ export const likePost = createServerFn({ method: "POST" })
       await sql`delete from post_likes where post_id = ${id} and user_id = ${context.userId}`;
     } else {
       await sql`insert into post_likes (post_id, user_id) values (${id}, ${context.userId})`;
+      await awardPoints(sql, context.userId, `like:${id}`, 1);
+      const owner = await sql<{ user_id: string }>`select user_id from posts where id = ${id} limit 1`;
+      if (owner[0] && owner[0].user_id !== context.userId) {
+        await awardPoints(sql, owner[0].user_id, `liked:${id}:${context.userId}`, 2);
+      }
     }
     return { ok: true as const };
   });
@@ -277,10 +285,12 @@ export const addPostComment = createServerFn({ method: "POST" })
   })
   .handler(async ({ context, data }) => {
     const sql = await getSql();
-    await sql`
+    const inserted = await sql<{ id: number }>`
       insert into post_comments (post_id, user_id, body)
       values (${data.postId}, ${context.userId}, ${data.body})
+      returning id
     `;
+    await awardPoints(sql, context.userId, `comment:${inserted[0]?.id ?? 0}`, 3);
     const post = await sql<{ user_id: string }>`select user_id from posts where id = ${data.postId} limit 1`;
     if (post[0] && post[0].user_id !== context.userId) {
       const me = await sql<{ display_name: string }>`

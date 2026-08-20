@@ -38,6 +38,8 @@ export type ProfileRow = {
   last_seen?: string | null;
   badge?: string | null;
   wasl_no?: number | null;
+  role?: string | null;
+  points?: number | null;
 };
 
 export type RoomDetail = {

@@ -58,8 +58,9 @@ export const adminListMembers = createServerFn({ method: "GET" })
       last_seen: string | null;
       role: string;
       badge: string | null;
+      points: number | null;
     }>`
-      select user_id, username, display_name, email, phone, bio, avatar_url, avatar_data, last_seen, role, badge
+      select user_id, username, display_name, email, phone, bio, avatar_url, avatar_data, last_seen, role, badge, coalesce(points, 0)::int as points
       from profiles
       order by case when role = 'owner' then 0 when role = 'admin' then 1 when role = 'banned' then 3 else 2 end, display_name
     `;
@@ -76,6 +77,7 @@ export const adminListMembers = createServerFn({ method: "GET" })
         online: r.last_seen ? Date.now() - new Date(r.last_seen).getTime() < 45_000 : false,
         role: r.role,
         badge: r.badge,
+        points: r.points,
       }),
     );
   });

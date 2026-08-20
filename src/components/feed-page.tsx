@@ -89,6 +89,9 @@ export function FeedPage() {
                 #{r.name}
               </Link>
             ))}
+            <Link to="/tools" className="shrink-0 rounded-full border border-accent/40 px-3 py-1.5 text-accent">
+              ألعاب وتلفاز
+            </Link>
           </div>
         ) : null}
 

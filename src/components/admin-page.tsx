@@ -80,7 +80,7 @@ export function AdminPage() {
               </Avatar>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm">
-                  {person.display_name} <NameBadge badge={person.badge} />
+                  {person.display_name} <NameBadge badge={person.badge} role={person.role} points={person.points} />
                 </p>
                 <p className="truncate text-xs text-muted">
                   @{person.username ?? "بدون"} · {person.role}

@@ -21,7 +21,7 @@ export function UserActions({
   person,
   children,
 }: {
-  person: Pick<ProfileRow, "user_id" | "display_name" | "username" | "avatar_url" | "online" | "badge" | "wasl_no">;
+  person: Pick<ProfileRow, "user_id" | "display_name" | "username" | "avatar_url" | "online" | "badge" | "wasl_no" | "role" | "points">;
   children: React.ReactNode;
 }) {
   const navigate = useNavigate();
@@ -82,7 +82,7 @@ export function UserActions({
           </Avatar>
           <div className="min-w-0">
             <p className="truncate text-sm">
-              {person.display_name} <NameBadge badge={person.badge} />
+              {person.display_name} <NameBadge badge={person.badge} role={person.role} points={person.points} />
             </p>
             <p className="truncate text-xs text-muted">
               رقم {person.wasl_no ?? "—"} · @{person.username ?? "بدون"}

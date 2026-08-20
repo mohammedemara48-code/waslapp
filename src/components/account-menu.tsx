@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { LogOut, Shield, UserRound } from "lucide-react";
+import { Gamepad2, LogOut, Shield, UserRound } from "lucide-react";
 import { signOut } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useQuery } from "@tanstack/react-query";
@@ -50,6 +50,12 @@ export function AccountMenu() {
           <Link to="/me">
             <UserRound className="size-4" />
             ملفي
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/tools">
+            <Gamepad2 className="size-4" />
+            ألعاب وتلفاز
           </Link>
         </DropdownMenuItem>
         {role.data?.role === "owner" || role.data?.role === "admin" ? (

@@ -23,6 +23,8 @@ function mapProfile(row: {
   online?: boolean | number;
   badge?: string | null;
   wasl_no?: number | null;
+  role?: string | null;
+  points?: number | null;
 }): ProfileRow {
   return {
     user_id: row.user_id,
@@ -36,6 +38,8 @@ function mapProfile(row: {
     online: Boolean(row.online),
     badge: row.badge ?? null,
     wasl_no: row.wasl_no ?? null,
+    role: row.role ?? null,
+    points: row.points ?? 0,
   };
 }
 
@@ -98,8 +102,10 @@ export const listOnline = createServerFn({ method: "GET" })
       last_seen: string | null;
       badge: string | null;
       wasl_no: number | null;
+      role: string | null;
+      points: number | null;
     }>`
-      select p.user_id, p.username, p.display_name, p.email, p.phone, p.bio, p.avatar_url, p.avatar_data, p.last_seen, p.badge, p.wasl_no
+      select p.user_id, p.username, p.display_name, p.email, p.phone, p.bio, p.avatar_url, p.avatar_data, p.last_seen, p.badge, p.wasl_no, p.role, coalesce(p.points, 0)::int as points
       from profiles p
       where p.user_id <> ${context.userId}
         and p.last_seen > now() - interval '45 seconds'
@@ -131,11 +137,13 @@ export const listMembers = createServerFn({ method: "GET" })
       online: boolean;
       badge: string | null;
       wasl_no: number | null;
+      role: string | null;
+      points: number | null;
     }>`
       select
         p.user_id, p.username, p.display_name, p.email, p.phone, p.bio, p.avatar_url, p.avatar_data, p.last_seen,
         (p.last_seen > now() - interval '45 seconds') as online,
-        p.badge, p.wasl_no
+        p.badge, p.wasl_no, p.role, coalesce(p.points, 0)::int as points
       from profiles p
       where not exists (
         select 1 from blocks b
@@ -165,8 +173,10 @@ export const getPublicProfile = createServerFn({ method: "GET" })
       last_seen: string | null;
       badge: string | null;
       wasl_no: number | null;
+      role: string | null;
+      points: number | null;
     }>`
-      select user_id, username, display_name, email, phone, bio, avatar_url, avatar_data, last_seen, badge, wasl_no
+      select user_id, username, display_name, email, phone, bio, avatar_url, avatar_data, last_seen, badge, wasl_no, role, coalesce(points, 0)::int as points
       from profiles where user_id = ${userId} limit 1
     `;
     const row = rows[0];

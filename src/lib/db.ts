@@ -268,6 +268,15 @@ async function createPgliteSql(): Promise<Sql> {
         requested_at timestamptz not null default now(),
         primary key (room_id, user_id)
       );
+      alter table if exists profiles add column if not exists points int;
+      update profiles set points = 0 where points is null;
+      create table if not exists point_events (
+        user_id text not null,
+        key text not null,
+        amount int not null,
+        created_at timestamptz not null default now(),
+        primary key (user_id, key)
+      );
     `);
     await pg.exec(`
       create sequence if not exists wasl_no_seq start with 1001;

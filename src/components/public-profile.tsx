@@ -50,9 +50,9 @@ export function PublicProfile({ userId }: { userId: string }) {
           </div>
           <div className="min-w-0 flex-1">
             <h1 className="font-display text-3xl">
-              {profile.display_name} <NameBadge badge={profile.badge} />
+              {profile.display_name} <NameBadge badge={profile.badge} role={profile.role} points={profile.points} />
             </h1>
-            <p className="text-sm text-muted">رقم {profile.wasl_no ?? "—"} · @{profile.username ?? "بدون"}</p>
+            <p className="text-sm text-muted">رقم {profile.wasl_no ?? "—"} · @{profile.username ?? "بدون"} · {profile.points ?? 0} نقطة</p>
             <p className="mt-1 text-xs text-subtle">{formatLastSeen(profile.last_seen, profile.online)}</p>
           </div>
         </div>

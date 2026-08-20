@@ -8,6 +8,7 @@ import { enableBrowserNotifications } from "@/lib/pwa";
 import { signOut } from "@/lib/auth/client";
 import { AppShell } from "@/components/app-shell";
 import { ShareInvite } from "@/components/share-invite";
+import { NameBadge } from "@/components/name-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +85,9 @@ export function ProfilePage() {
           {me.data?.wasl_no ? (
             <p className="mt-2 text-sm text-muted">رقم وصل: <span className="text-fg">{me.data.wasl_no}</span> — شاركه ليضيفك الأصدقاء</p>
           ) : null}
+          <p className="mt-2 text-sm text-muted">
+            النقاط: {me.data?.points ?? 0} · <NameBadge role={me.data?.role} points={me.data?.points ?? 0} badge={me.data?.badge} />
+          </p>
           <div className="mt-3">
             <ShareInvite waslNo={me.data?.wasl_no} />
           </div>

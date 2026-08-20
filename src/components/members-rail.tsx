@@ -31,7 +31,7 @@ export function MembersRail() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm">
-                    {person.display_name} <NameBadge badge={person.badge} />
+                    {person.display_name} <NameBadge badge={person.badge} role={person.role} points={person.points} />
                   </span>
                   <span className="block truncate text-[11px] text-muted">
                     رقم {person.wasl_no ?? "—"} · @{person.username ?? "بدون"}
