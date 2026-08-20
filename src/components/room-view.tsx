@@ -22,7 +22,6 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { useI18n } from "@/lib/i18n";
 import { CallStage } from "@/components/call-stage";
 import { IncomingCallScreen } from "@/components/incoming-call-screen";
-import { CallInviteBar } from "@/components/call-invite-bar";
 import { MessageMedia } from "@/components/message-media";
 import { VoiceNoteButton } from "@/components/voice-note-button";
 import { startCallTone, stopCallTone } from "@/lib/call-tone";
@@ -210,7 +209,15 @@ export function RoomView({ slug }: { slug: string }) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-        video: kind === "video",
+        video:
+          kind === "video"
+            ? {
+                facingMode: "user",
+                aspectRatio: { ideal: 0.75 },
+                width: { ideal: 720 },
+                height: { ideal: 1280 },
+              }
+            : false,
       });
       setIncoming(null);
       stopCallTone();
@@ -326,7 +333,9 @@ export function RoomView({ slug }: { slug: string }) {
       return;
     }
     try {
-      const extra = await navigator.mediaDevices.getUserMedia({ video: true });
+      const extra = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", aspectRatio: { ideal: 0.75 }, width: { ideal: 720 }, height: { ideal: 1280 } },
+      });
       extra.getVideoTracks().forEach((t) => localStream.addTrack(t));
       setLocalStream(localStream.clone());
       setCameraOn(true);
@@ -561,8 +570,8 @@ export function RoomView({ slug }: { slug: string }) {
                   onToggleCamera={() => void toggleCamera()}
                   onHangup={hangup}
                   ringOut={callMode !== "answer"}
+                  slug={slug}
                 />
-                <CallInviteBar slug={slug} kind={callKind} />
               </div>
             ) : null}
 
