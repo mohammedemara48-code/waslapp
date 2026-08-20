@@ -77,3 +77,19 @@ export type StoryRow = {
   views: number;
   visibility?: string | null;
 };
+
+export type PostRow = {
+  id: number;
+  user_id: string;
+  kind: string;
+  body: string;
+  media_data: string | null;
+  visibility: string;
+  created_at: string;
+  display_name: string;
+  avatar_url: string | null;
+  username: string | null;
+  wasl_no: number | null;
+  likes: number;
+  liked: boolean;
+};

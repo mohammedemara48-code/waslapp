@@ -15,6 +15,7 @@ import { Route as FriendsRouteImport } from './routes/friends'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as RoomsRouteImport } from './routes/rooms'
 import { Route as StoriesRouteImport } from './routes/stories'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as ApiRtcRouteImport } from './routes/api/rtc'
@@ -50,6 +51,11 @@ const MeRoute = MeRouteImport.update({
 const MessagesRoute = MessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoomsRoute = RoomsRouteImport.update({
+  id: '/rooms',
+  path: '/rooms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StoriesRoute = StoriesRouteImport.update({
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
   '/messages': typeof MessagesRoute
+  '/rooms': typeof RoomsRoute
   '/stories': typeof StoriesRoute
   '/tools': typeof ToolsRoute
   '/api/rtc': typeof ApiRtcRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
   '/messages': typeof MessagesRoute
+  '/rooms': typeof RoomsRoute
   '/stories': typeof StoriesRoute
   '/tools': typeof ToolsRoute
   '/api/rtc': typeof ApiRtcRoute
@@ -119,6 +127,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
   '/messages': typeof MessagesRoute
+  '/rooms': typeof RoomsRoute
   '/stories': typeof StoriesRoute
   '/tools': typeof ToolsRoute
   '/api/rtc': typeof ApiRtcRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/me'
     | '/messages'
+    | '/rooms'
     | '/stories'
     | '/tools'
     | '/api/rtc'
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/me'
     | '/messages'
+    | '/rooms'
     | '/stories'
     | '/tools'
     | '/api/rtc'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/me'
     | '/messages'
+    | '/rooms'
     | '/stories'
     | '/tools'
     | '/api/rtc'
@@ -178,6 +190,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MeRoute: typeof MeRoute
   MessagesRoute: typeof MessagesRoute
+  RoomsRoute: typeof RoomsRoute
   StoriesRoute: typeof StoriesRoute
   ToolsRoute: typeof ToolsRoute
   ApiRtcRoute: typeof ApiRtcRoute
@@ -228,6 +241,13 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/messages'
       preLoaderRoute: typeof MessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rooms': {
+      id: '/rooms'
+      path: '/rooms'
+      fullPath: '/rooms'
+      preLoaderRoute: typeof RoomsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/stories': {
@@ -282,6 +302,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MeRoute: MeRoute,
   MessagesRoute: MessagesRoute,
+  RoomsRoute: RoomsRoute,
   StoriesRoute: StoriesRoute,
   ToolsRoute: ToolsRoute,
   ApiRtcRoute: ApiRtcRoute,

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { getMyProfile, updateMyProfile } from "@/lib/social/server";
 import { compressImage, initials } from "@/lib/utils";
@@ -136,6 +137,9 @@ export function ProfilePage() {
           </Button>
           <Button type="button" variant="ghost" onClick={() => void signOut("/login")}>
             تسجيل الخروج
+          </Button>
+          <Button type="button" variant="ghost" asChild>
+            <Link to="/tools">الألعاب والأدوات</Link>
           </Button>
         </div>
       </form>

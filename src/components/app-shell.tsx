@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Hash, MessageCircle, Puzzle, Sparkles, UserRound, Users } from "lucide-react";
+import { Hash, House, MessageCircle, Sparkles, UserRound, Users } from "lucide-react";
 import { AccountMenu } from "@/components/account-menu";
 import { BrandMark } from "@/components/brand-mark";
 import { InstallPrompt } from "@/components/install-prompt";
@@ -9,11 +9,11 @@ import { NotificationBell } from "@/components/notification-bell";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { to: "/", label: "الغرف", icon: Hash, key: "rooms" },
+  { to: "/", label: "الرئيسية", icon: House, key: "feed" },
+  { to: "/rooms", label: "الغرف", icon: Hash, key: "rooms" },
   { to: "/messages", label: "الخاصة", icon: MessageCircle, key: "messages" },
   { to: "/stories", label: "القصص", icon: Sparkles, key: "stories" },
   { to: "/friends", label: "الأصدقاء", icon: Users, key: "friends" },
-  { to: "/tools", label: "أدوات", icon: Puzzle, key: "tools" },
   { to: "/me", label: "حسابي", icon: UserRound, key: "me" },
 ] as const;
 
@@ -22,7 +22,7 @@ export function AppShell({
   children,
   sidebar,
 }: {
-  active: "rooms" | "messages" | "friends" | "me" | "chat" | "stories" | "tools";
+  active: "rooms" | "messages" | "friends" | "me" | "chat" | "stories" | "tools" | "feed";
   children: ReactNode;
   sidebar?: ReactNode;
 }) {

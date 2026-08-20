@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Landing } from "@/components/landing";
-import { Lobby } from "@/components/lobby";
+import { FeedPage } from "@/components/feed-page";
 import { useAuthReady } from "@/lib/use-auth-ready";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -20,5 +20,5 @@ function Home() {
     );
   }
   if (!user) return <Landing />;
-  return <Lobby />;
+  return <FeedPage />;
 }
