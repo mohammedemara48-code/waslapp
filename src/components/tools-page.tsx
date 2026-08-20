@@ -4,32 +4,20 @@ import { toast } from "sonner";
 import { listFriends, inviteToPlay } from "@/lib/social/server";
 import { getMyPoints } from "@/lib/points/server";
 import { RANK_POINTS, rankLabel } from "@/lib/points";
+import { NEWS_TV, RADIO_STATIONS } from "@/lib/broadcast";
+import { useRadio } from "@/lib/radio";
 import { AppShell } from "@/components/app-shell";
 import { NameBadge } from "@/components/name-badge";
 import { SudokuGame } from "@/components/sudoku-game";
 import { ChessGame } from "@/components/chess-game";
 import { Button } from "@/components/ui/button";
 
-const EGYPT_TV = [
-  { name: "إكسترا نيوز", channel: "UC65F33K2cXk9hGDbOQYhTOw" },
-  { name: "النيل للأخبار", channel: "UCqNEIF-M6df1pAth2pUVFdQ" },
-  { name: "ON", channel: "UCZghOmDezc6OCMzdPaL-j2Q" },
-  { name: "DMC", channel: "UCEeFa7t5I0fqpcLGF-36TEw" },
-  { name: "TEN", channel: "UChrHIeTNFl00eIUW4KdJBcw" },
-  { name: "القناة الأولى", channel: "UCU2EMBWN2XnA4r3kha-EdJQ" },
-];
-
-const EGYPT_RADIO = [
-  { name: "الراديو 9090", src: "https://9090streaming.mobtada.com/9090FMEGYPT" },
-  { name: "إذاعة القرآن الكريم", src: "https://backup.qurango.net/radio/tarateel" },
-];
-
 export function ToolsPage() {
   const friends = useQuery({ queryKey: ["friends"], queryFn: () => listFriends() });
   const stats = useQuery({ queryKey: ["my-points"], queryFn: () => getMyPoints() });
+  const radio = useRadio();
   const [tab, setTab] = useState<"games" | "tv" | "radio">("games");
-  const [tv, setTv] = useState(EGYPT_TV[0]!.channel);
-  const [radio, setRadio] = useState(EGYPT_RADIO[0]!.src);
+  const [tv, setTv] = useState(NEWS_TV[0]!.channel);
   const points = stats.data?.points ?? 0;
 
   return (
@@ -102,9 +90,9 @@ export function ToolsPage() {
           </>
         ) : tab === "tv" ? (
           <section className="space-y-3">
-            <p className="text-sm text-muted">قنوات مصرية تشتغل جوّه التطبيق (بث يوتيوب المباشر). لو قناة مش على الهواء هتظهر فارغة — جرّب غيرها.</p>
+            <p className="text-sm text-muted">بث مباشر داخل التطبيق. لو قناة مش على الهواء دلوقتي جرّب غيرها.</p>
             <div className="flex flex-wrap gap-1.5">
-              {EGYPT_TV.map((ch) => (
+              {NEWS_TV.map((ch) => (
                 <Button key={ch.channel} size="sm" variant={tv === ch.channel ? "default" : "secondary"} onClick={() => setTv(ch.channel)}>
                   {ch.name}
                 </Button>
@@ -124,18 +112,26 @@ export function ToolsPage() {
           </section>
         ) : (
           <section className="space-y-3">
-            <p className="text-sm text-muted">محطات مصرية تشتغل مباشرة من هنا.</p>
-            <div className="flex flex-wrap gap-1.5">
-              {EGYPT_RADIO.map((st) => (
-                <Button key={st.src} size="sm" variant={radio === st.src ? "default" : "secondary"} onClick={() => setRadio(st.src)}>
-                  {st.name}
-                </Button>
-              ))}
-            </div>
-            <div className="rounded-xl border border-border bg-surface px-4 py-3">
-              <p className="mb-2 text-sm">{EGYPT_RADIO.find((s) => s.src === radio)?.name}</p>
-              <audio key={radio} className="w-full" controls preload="none" src={radio} />
-            </div>
+            <p className="text-sm text-muted">تشغيل جوّه التطبيق ويكمل وأنت بتتنقل أو تلعب. شريط صغير يظهر أسفل الشاشة.</p>
+            {(["مصر", "عربي"] as const).map((region) => (
+              <div key={region} className="space-y-2">
+                <h2 className="text-xs text-subtle">{region}</h2>
+                {RADIO_STATIONS.filter((s) => s.region === region).map((st) => {
+                  const on = radio.station?.src === st.src;
+                  return (
+                    <button
+                      key={st.src}
+                      type="button"
+                      onClick={() => (on && radio.playing ? radio.toggle() : radio.play(st))}
+                      className="flex w-full items-center justify-between rounded-xl border border-border bg-surface px-4 py-3 text-right text-sm hover:bg-elevated"
+                    >
+                      <span>{st.name}</span>
+                      <span className="text-xs text-accent">{on && radio.playing ? "يعمل" : "تشغيل"}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
           </section>
         )}
       </div>

@@ -5,7 +5,9 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { ensureProfile } from "@/lib/social/server";
 import { rememberAccount } from "@/lib/accounts";
 import { registerServiceWorker, enableBrowserNotifications } from "@/lib/pwa";
+import { RadioProvider } from "@/lib/radio";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
+import { RadioDock } from "@/components/radio-dock";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "sonner";
 
@@ -46,18 +48,21 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <QueryClientProvider client={client}>
       <AuthProvider>
         <TooltipProvider delayDuration={200}>
-          <PwaBoot />
-          <ProfileSync />
-          <PresenceHeartbeat />
-          {children}
-          <Toaster
-            theme="dark"
-            dir="rtl"
-            position="top-center"
-            toastOptions={{
-              className: "font-sans",
-            }}
-          />
+          <RadioProvider>
+            <PwaBoot />
+            <ProfileSync />
+            <PresenceHeartbeat />
+            {children}
+            <RadioDock />
+            <Toaster
+              theme="dark"
+              dir="rtl"
+              position="top-center"
+              toastOptions={{
+                className: "font-sans",
+              }}
+            />
+          </RadioProvider>
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
