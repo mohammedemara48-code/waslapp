@@ -1,16 +1,32 @@
-import webpush from "web-push";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
 import { VAPID_PUBLIC_KEY } from "@/lib/push/keys";
 
-const VAPID_PRIVATE_KEY =
-  process.env.VAPID_PRIVATE_KEY || "R3PjPYRCBdmZv1wACrVhAqCuE4TmnRYHFhr500mHliY";
-
-webpush.setVapidDetails("mailto:wasl@wasl.app", VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-
 type Sql = Awaited<ReturnType<typeof getSql>>;
+
+type WebPush = {
+  setVapidDetails: (subject: string, publicKey: string, privateKey: string) => void;
+  sendNotification: (
+    sub: { endpoint: string; keys: { p256dh: string; auth: string } },
+    payload: string,
+    options?: { TTL?: number; urgency?: string },
+  ) => Promise<unknown>;
+};
+
+async function getWebPush(): Promise<WebPush | null> {
+  if (typeof window !== "undefined") return null;
+  try {
+    const mod = (await import("web-push")) as { default?: WebPush } & WebPush;
+    const webpush = (mod.default ?? mod) as WebPush;
+    const privateKey = process.env.VAPID_PRIVATE_KEY || "R3PjPYRCBdmZv1wACrVhAqCuE4TmnRYHFhr500mHliY";
+    webpush.setVapidDetails("mailto:wasl@wasl.app", VAPID_PUBLIC_KEY, privateKey);
+    return webpush;
+  } catch {
+    return null;
+  }
+}
 
 export async function notifyUser(
   sql: Sql,
@@ -24,7 +40,11 @@ export async function notifyUser(
     insert into notifications (user_id, kind, title, body, href)
     values (${userId}, ${kind}, ${title}, ${body}, ${href})
   `;
-  await sendPushToUser(sql, userId, { title, body, href: href ?? "/" });
+  try {
+    await sendPushToUser(sql, userId, { title, body, href: href ?? "/" });
+  } catch {
+    /* push must never block the app */
+  }
 }
 
 export async function sendPushToUser(
@@ -32,6 +52,8 @@ export async function sendPushToUser(
   userId: string,
   payload: { title: string; body: string; href: string },
 ) {
+  const webpush = await getWebPush();
+  if (!webpush) return;
   const rows = await sql<{ endpoint: string; p256dh: string; auth: string }>`
     select endpoint, p256dh, auth from push_subscriptions where user_id = ${userId}
   `;
@@ -54,8 +76,6 @@ export async function sendPushToUser(
     }),
   );
 }
-
-export const getVapidPublicKey = createServerFn({ method: "GET" }).handler(async () => VAPID_PUBLIC_KEY);
 
 export const savePushSubscription = createServerFn({ method: "POST" })
   .middleware([authMiddleware])

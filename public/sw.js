@@ -1,4 +1,4 @@
-const CACHE = "wasl-shell-v2";
+const CACHE = "wasl-shell-v3";
 const SHELL = ["/", "/favicon.svg", "/icon-192.png", "/icon-512.png", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
@@ -22,11 +22,15 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return;
+  if (req.mode === "navigate" || req.destination === "document") {
+    event.respondWith(fetch(req).catch(() => caches.match("/").then((hit) => hit || fetch(req))));
+    return;
+  }
   event.respondWith(
     fetch(req)
       .then((res) => {
         const copy = res.clone();
-        if (res.ok && req.destination !== "") {
+        if (res.ok && (req.destination === "script" || req.destination === "style" || req.destination === "image" || req.destination === "font")) {
           caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => {});
         }
         return res;

@@ -123,6 +123,21 @@ function authPopupPlugin(): Plugin {
   };
 }
 
+function stubWebPushOnClient(): Plugin {
+  return {
+    name: "stub-web-push-client",
+    enforce: "pre",
+    resolveId(id, _importer, options) {
+      if (id === "web-push" && !options?.ssr) return "\0empty-web-push";
+    },
+    load(id) {
+      if (id === "\0empty-web-push") {
+        return "export default { setVapidDetails() {}, sendNotification: async () => {} };";
+      }
+    },
+  };
+}
+
 // `0.0.0.0:8080` is the live-preview contract — don't change host/port.
 // Keep `nitro` gated to `build` (the Vercel deploy target): enabled in dev it
 // opens a second dev-server port, which breaks the single-port preview.
@@ -136,6 +151,7 @@ export default defineConfig(({ command }) => ({
   },
   resolve: { tsconfigPaths: true },
   plugins: [
+    stubWebPushOnClient(),
     pgliteBootstrapPlugin(),
     // Before tanstackStart so /auth/popup never falls through to the SPA.
     authPopupPlugin(),
@@ -156,4 +172,10 @@ export default defineConfig(({ command }) => ({
       : []),
     viteReact(),
   ],
+  optimizeDeps: {
+    exclude: ["web-push"],
+  },
+  ssr: {
+    external: ["web-push"],
+  },
 }));
