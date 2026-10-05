@@ -1,5 +1,4 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
-import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { AppProviders } from "@/components/providers";
 import { siteOrigin } from "@/lib/site";
 import appCss from "../styles.css?url";
@@ -10,9 +9,6 @@ const APP_DESC =
 const host = import.meta.env.VITE_PUBLIC_HOSTNAME;
 const siteUrl = siteOrigin();
 const ogImage = host ? `https://${host}/og.jpg` : `${siteUrl}/og.jpg`;
-const xBanner = host
-  ? `https://og.grok.me/v1/banner.png?host=${encodeURIComponent(host)}&title=${encodeURIComponent(APP_NAME)}&color=E8C36A`
-  : undefined;
 
 export const Route = createRootRoute({
   head: () => ({
@@ -40,13 +36,6 @@ export const Route = createRootRoute({
             { property: "og:image:height", content: "630" },
           ]
         : []),
-      ...(xBanner
-        ? [
-            { property: "x:game:image", content: xBanner },
-            { property: "x:game:image:width", content: "1200" },
-            { property: "x:game:image:height", content: "264" },
-          ]
-        : []),
     ],
     links: [
       { rel: "canonical", href: `${siteUrl}/` },
@@ -54,8 +43,6 @@ export const Route = createRootRoute({
       { rel: "apple-touch-icon", href: "/icon-180.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "stylesheet", href: appCss },
-      { rel: "manifest", href: "/__grok/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -70,7 +57,6 @@ export const Route = createRootRoute({
         <HeadContent />
       </head>
       <body>
-        <PreviewHostBridge />
         <AppProviders>
           <Outlet />
         </AppProviders>
