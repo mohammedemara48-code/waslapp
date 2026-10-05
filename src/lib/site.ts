@@ -8,5 +8,5 @@ export function siteOrigin(): string {
     const { hostname, origin } = window.location;
     if (hostname && hostname !== "localhost" && hostname !== "127.0.0.1") return origin;
   }
-  return "https://waslapp-sigma.vercel.app";
+  return "https://waslapp-waslapp.vercel.app";
 }
