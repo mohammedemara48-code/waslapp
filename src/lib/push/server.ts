@@ -17,11 +17,18 @@ type WebPush = {
 
 async function getWebPush(): Promise<WebPush | null> {
   if (typeof window !== "undefined") return null;
+  const publicKey = (process.env.VITE_VAPID_PUBLIC_KEY || VAPID_PUBLIC_KEY || "").trim();
+  const privateKey = (process.env.VAPID_PRIVATE_KEY || "").trim();
+  if (!publicKey || !privateKey) {
+    console.warn(
+      "[push] VAPID keys missing — web push disabled until VITE_VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY are set",
+    );
+    return null;
+  }
   try {
     const mod = (await import("web-push")) as { default?: WebPush } & WebPush;
     const webpush = (mod.default ?? mod) as WebPush;
-    const privateKey = process.env.VAPID_PRIVATE_KEY || "R3PjPYRCBdmZv1wACrVhAqCuE4TmnRYHFhr500mHliY";
-    webpush.setVapidDetails("mailto:wasl@wasl.app", VAPID_PUBLIC_KEY, privateKey);
+    webpush.setVapidDetails("mailto:wasl@wasl.app", publicKey, privateKey);
     return webpush;
   } catch {
     return null;
