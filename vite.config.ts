@@ -156,7 +156,8 @@ export default defineConfig(({ command }) => ({
     // Before tanstackStart so /auth/popup never falls through to the SPA.
     authPopupPlugin(),
     // PWA head + ?install=1 tutorial page; runs before Start/Nitro.
-    grokPwaPlugin(),
+    // grokPwaPlugin(), // disabled: standalone waslapp (no grok.com chrome)
+    void grokPwaPlugin,
     tailwindcss(),
     tanstackStart(),
     ...(command === "build"
