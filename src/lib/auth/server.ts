@@ -74,8 +74,24 @@ const extraTrusted = (env("BETTER_AUTH_TRUSTED_ORIGINS") ?? "")
   .map((s) => s.trim())
   .filter(Boolean);
 
+function vercelOrigins(): string[] {
+  const out: string[] = [];
+  for (const key of ["VERCEL_URL", "VERCEL_PROJECT_PRODUCTION_URL", "VERCEL_BRANCH_URL"]) {
+    const v = env(key)?.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+    if (v) out.push(`https://${v}`);
+  }
+  return out;
+}
+
+// Exact origins only — a `https://*.vercel.app` wildcard would trust every
+// other tenant on the shared domain.
 const trustedOrigins: string[] = Array.from(
-  new Set([baseURL, ...extraTrusted, ...LOCAL_DEV_ORIGINS, "https://*.vercel.app"]),
+  new Set([
+    baseURL,
+    ...vercelOrigins(),
+    ...extraTrusted,
+    ...(isDeployed ? [] : LOCAL_DEV_ORIGINS),
+  ]),
 );
 
 function resolveAuthSecret(): string {

@@ -22,21 +22,13 @@ export const authEnabled = import.meta.env.VITE_AUTH_ENABLED !== "false";
 
 /** Social providers to render (empty = phone/email password only). */
 export { AUTH_SOCIAL_PROVIDERS };
-/** @deprecated Use AUTH_SOCIAL_PROVIDERS — kept empty for old imports. */
-export const GROK_PROVIDERS = AUTH_SOCIAL_PROVIDERS;
 
 const BEARER_KEY = "wasl-auth.bearer-token";
-/** Legacy key from the Grok sandbox template — cleared on sign-out. */
-const LEGACY_BEARER_KEY = "grok-auth.bearer-token";
 
 export function getBearerToken(): string | null {
   if (typeof window === "undefined") return null;
   try {
-    return (
-      window.sessionStorage.getItem(BEARER_KEY) ||
-      window.sessionStorage.getItem(LEGACY_BEARER_KEY) ||
-      window.localStorage.getItem(LEGACY_BEARER_KEY)
-    );
+    return window.sessionStorage.getItem(BEARER_KEY);
   } catch {
     return null;
   }
@@ -47,8 +39,6 @@ export function setBearerToken(token: string | null): void {
   try {
     if (token) window.sessionStorage.setItem(BEARER_KEY, token);
     else window.sessionStorage.removeItem(BEARER_KEY);
-    window.sessionStorage.removeItem(LEGACY_BEARER_KEY);
-    window.localStorage.removeItem(LEGACY_BEARER_KEY);
     window.localStorage.removeItem(BEARER_KEY);
   } catch {
     /* storage unavailable */
