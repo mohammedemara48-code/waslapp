@@ -4,6 +4,7 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { listNotifications, markNotificationsRead } from "@/lib/social/server";
 import { parseCallHref, stashCall } from "@/lib/i18n/notices";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { syncAppBadge, dismissChatNotifications } from "@/lib/pwa";
 import { IncomingCallScreen } from "@/components/incoming-call-screen";
 
 export function IncomingCallBanner() {
@@ -21,6 +22,14 @@ export function IncomingCallBanner() {
     .filter((n) => !n.read && n.kind === "call")
     .map((n) => ({ n, parsed: parseCallHref(n.href) }))
     .find((x) => x.parsed);
+  const unread = (notes.data ?? []).filter((n) => !n.read).length;
+  useEffect(() => {
+    if (notes.data) syncAppBadge(unread);
+  }, [unread, notes.data]);
+  const chatSlug = path.match(/^\/r\/([a-zA-Z0-9_-]+)/)?.[1];
+  useEffect(() => {
+    if (chatSlug) dismissChatNotifications(chatSlug);
+  }, [chatSlug]);
   const inRoom = Boolean(call?.parsed && path === `/r/${call.parsed.slug}`);
 
   useEffect(() => {
