@@ -67,3 +67,23 @@ export async function signOut(redirectTo = "/"): Promise<void> {
   }
   window.location.href = redirectTo;
 }
+
+/** Sign in with Google through Firebase Auth, then exchange the verified ID token for a waslapp session. */
+export async function signInWithGoogle(): Promise<void> {
+  const { getAuth, GoogleAuthProvider, signInWithPopup, signOut: fbSignOut } = await import(
+    "firebase/auth"
+  );
+  const { getFirebaseApp } = await import("../firebase");
+  const fbAuth = getAuth(getFirebaseApp());
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+  const cred = await signInWithPopup(fbAuth, provider);
+  const idToken = await cred.user.getIdToken(true);
+  const { error } = await authClient.$fetch("/firebase/google", {
+    method: "POST",
+    body: { idToken },
+  });
+  // Firebase session is only a bridge; the app session is Better Auth's.
+  void fbSignOut(fbAuth).catch(() => undefined);
+  if (error) throw new Error("تعذر تسجيل الدخول عبر جوجل");
+}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { authClient, authEnabled } from "@/lib/auth/client";
+import { authClient, authEnabled, signInWithGoogle } from "@/lib/auth/client";
 import { claimLocalAccount } from "@/lib/social/server";
 import { emailToPhone, phoneToEmail } from "@/lib/utils";
 import { listSavedAccounts } from "@/lib/accounts";
@@ -28,6 +28,29 @@ export function Landing() {
       setTab("in");
       setPhone(localPhone);
       setError(t.enter_password);
+    }
+  }
+
+  async function submitGoogle() {
+    setError(null);
+    setBusy("google");
+    try {
+      await signInWithGoogle();
+      window.location.href = "/";
+    } catch (err) {
+      const code = (err as { code?: string } | null)?.code ?? "";
+      if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
+        setError(null);
+      } else if (code === "auth/operation-not-allowed") {
+        setError("تسجيل الدخول عبر جوجل غير مفعّل بعد");
+      } else if (code === "auth/unauthorized-domain") {
+        setError("هذا النطاق غير مصرّح له بتسجيل الدخول عبر جوجل بعد");
+      } else if (code === "auth/popup-blocked") {
+        setError("المتصفح منع النافذة المنبثقة — اسمح بها وحاول مرة أخرى");
+      } else {
+        setError(err instanceof Error ? err.message : "تعذر تسجيل الدخول عبر جوجل");
+      }
+      setBusy(null);
     }
   }
 
@@ -172,6 +195,26 @@ export function Landing() {
                 </label>
                 <Button type="submit" className="w-full" disabled={busy !== null}>
                   {busy === "phone" ? t.saving : tab === "up" ? t.create_account : t.signin}
+                </Button>
+                <div className="flex items-center gap-3 py-1 text-xs text-subtle">
+                  <span className="h-px flex-1 bg-border" />
+                  <span>أو</span>
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full gap-2"
+                  disabled={busy !== null}
+                  onClick={() => void submitGoogle()}
+                >
+                  <svg aria-hidden viewBox="0 0 48 48" className="size-4">
+                    <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/>
+                    <path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/>
+                    <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/>
+                  </svg>
+                  {busy === "google" ? t.saving : "المتابعة باستخدام جوجل"}
                 </Button>
                 {saved.length > 0 ? (
                   <div className="space-y-2 pt-2">
