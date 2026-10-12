@@ -114,3 +114,37 @@ export function announceNotification(input: { title: string; body: string; href?
     });
   }
 }
+
+/** Mirror unread count on the home-screen icon (Android/desktop Chrome, iOS 16.4+ installed). */
+export function syncAppBadge(count: number) {
+  if (typeof navigator === "undefined") return;
+  const nav = navigator as Navigator & {
+    setAppBadge?: (n?: number) => Promise<void>;
+    clearAppBadge?: () => Promise<void>;
+  };
+  try {
+    if (count > 0) void nav.setAppBadge?.(count)?.catch(() => {});
+    else void nav.clearAppBadge?.()?.catch(() => {});
+  } catch {
+    /* unsupported */
+  }
+}
+
+/** Close OS notifications for a chat once the user is looking at it. */
+export function dismissChatNotifications(slug: string) {
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+  void navigator.serviceWorker.ready
+    .then((reg) => reg.getNotifications({ tag: `chat-${slug}` }))
+    .then((list) => list.forEach((n) => n.close()))
+    .catch(() => {});
+}
+
+export function isIosNotInstalled(): boolean {
+  if (typeof window === "undefined") return false;
+  const ua = navigator.userAgent;
+  const ios = /iPad|iPhone|iPod/.test(ua) || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
+  const standalone =
+    window.matchMedia?.("(display-mode: standalone)").matches ||
+    (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  return ios && !standalone;
+}

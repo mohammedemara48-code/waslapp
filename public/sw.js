@@ -1,5 +1,5 @@
-const CACHE = "wasl-shell-v3";
-const SHELL = ["/", "/favicon.svg", "/icon-192.png", "/icon-512.png", "/manifest.webmanifest"];
+const CACHE = "wasl-shell-v4";
+const SHELL = ["/", "/favicon.svg", "/icon-192.png", "/icon-512.png", "/icon-maskable.svg", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -39,20 +39,56 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  const href = event.notification.data?.href || "/";
-  event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
-      for (const client of clients) {
-        if ("focus" in client) {
-          client.navigate?.(href);
-          return client.focus();
-        }
+function openOrFocus(href) {
+  return self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+    for (const client of clients) {
+      if ("focus" in client) {
+        client.navigate?.(href);
+        return client.focus();
       }
-      return self.clients.openWindow(href);
-    }),
-  );
+    }
+    return self.clients.openWindow(href);
+  });
+}
+
+async function setBadge(n) {
+  try {
+    if (n > 0 && self.navigator.setAppBadge) await self.navigator.setAppBadge(n);
+    else if (self.navigator.clearAppBadge) await self.navigator.clearAppBadge();
+  } catch {
+    /* unsupported */
+  }
+}
+
+async function markRead(data) {
+  if (!data || !data.uid || !data.readHref || !data.readToken) return;
+  try {
+    const res = await fetch("/api/push/read", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ uid: data.uid, href: data.readHref, token: data.readToken }),
+    });
+    const json = await res.json().catch(() => null);
+    if (json && typeof json.unread === "number") await setBadge(json.unread);
+  } catch {
+    /* offline */
+  }
+}
+
+self.addEventListener("notificationclick", (event) => {
+  const data = event.notification.data || {};
+  const href = data.href || "/";
+  event.notification.close();
+  if (event.action === "read" || event.action === "decline") {
+    event.waitUntil(markRead(data));
+    return;
+  }
+  if (event.action === "answer") {
+    const sep = href.includes("?") ? "&" : "?";
+    event.waitUntil(openOrFocus(href + sep + "answer=1"));
+    return;
+  }
+  event.waitUntil(openOrFocus(href));
 });
 
 self.addEventListener("message", (event) => {
@@ -76,36 +112,59 @@ self.addEventListener("message", (event) => {
 self.addEventListener("push", (event) => {
   event.waitUntil(
     (async () => {
-      let title = "وصل";
-      let body = "إشعار جديد";
-      let href = "/";
+      let p = {};
       try {
-        if (event.data) {
-          const json = event.data.json();
-          title = json.title || title;
-          body = json.body || body;
-          href = json.href || href;
-        }
+        p = event.data ? event.data.json() : {};
       } catch {
         try {
-          body = event.data ? event.data.text() : body;
+          p = { body: event.data ? event.data.text() : "" };
         } catch {
-          /* ignore */
+          p = {};
         }
       }
+      const title = p.title || "وصل";
+      const body = p.body || "إشعار جديد";
+      const href = p.href || "/";
+      const kind = p.kind || "message";
+      const tag = p.tag || "wasl-push";
+      if (typeof p.badge === "number") await setBadge(p.badge);
       const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
       const visible = windows.some((c) => "visibilityState" in c && c.visibilityState === "visible");
       if (visible) return;
-      await self.registration.showNotification(title, {
-        body,
+      const data = { href, kind, uid: p.uid, readHref: p.readHref, readToken: p.readToken, lines: [body] };
+      let shownTitle = title;
+      let shownBody = body;
+      if (kind !== "call") {
+        // Stack messages of the same chat into one notification, like WhatsApp.
+        const prev = await self.registration.getNotifications({ tag });
+        const old = prev[0] && prev[0].data && Array.isArray(prev[0].data.lines) ? prev[0].data.lines : [];
+        data.lines = old.concat(body).slice(-5);
+        const count = old.length + 1;
+        if (count > 1) {
+          shownTitle = `${title} · ${count} رسائل جديدة`;
+          shownBody = data.lines.join("\n");
+        }
+      }
+      const isCall = kind === "call";
+      await self.registration.showNotification(shownTitle, {
+        body: shownBody,
         icon: "/icon-192.png",
         badge: "/icon-192.png",
-        data: { href },
+        data,
         dir: "rtl",
         lang: "ar",
-        vibrate: [40, 30, 80],
-        tag: "wasl-push",
+        tag,
         renotify: true,
+        requireInteraction: isCall,
+        vibrate: isCall ? [400, 200, 400, 200, 400, 200, 400] : [40, 30, 80],
+        actions: isCall
+          ? [
+              { action: "answer", title: "رد" },
+              { action: "decline", title: "رفض" },
+            ]
+          : p.readToken
+            ? [{ action: "read", title: "تمييز كمقروء" }]
+            : [],
       });
     })(),
   );

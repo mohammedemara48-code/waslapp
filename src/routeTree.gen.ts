@@ -31,6 +31,7 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiMediaBlobRouteImport } from './routes/api/media/blob'
 import { Route as ApiMediaConfigRouteImport } from './routes/api/media/config'
 import { Route as ApiMediaSignRouteImport } from './routes/api/media/sign'
+import { Route as ApiPushReadRouteImport } from './routes/api/push/read'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -142,6 +143,11 @@ const ApiMediaSignRoute = ApiMediaSignRouteImport.update({
   path: '/api/media/sign',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPushReadRoute = ApiPushReadRouteImport.update({
+  id: '/api/push/read',
+  path: '/api/push/read',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/api/media/blob': typeof ApiMediaBlobRoute
   '/api/media/config': typeof ApiMediaConfigRoute
   '/api/media/sign': typeof ApiMediaSignRoute
+  '/api/push/read': typeof ApiPushReadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/api/media/blob': typeof ApiMediaBlobRoute
   '/api/media/config': typeof ApiMediaConfigRoute
   '/api/media/sign': typeof ApiMediaSignRoute
+  '/api/push/read': typeof ApiPushReadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -215,6 +223,7 @@ export interface FileRoutesById {
   '/api/media/blob': typeof ApiMediaBlobRoute
   '/api/media/config': typeof ApiMediaConfigRoute
   '/api/media/sign': typeof ApiMediaSignRoute
+  '/api/push/read': typeof ApiPushReadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -241,6 +250,7 @@ export interface FileRouteTypes {
     | '/api/media/blob'
     | '/api/media/config'
     | '/api/media/sign'
+    | '/api/push/read'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/api/media/blob'
     | '/api/media/config'
     | '/api/media/sign'
+    | '/api/push/read'
   id:
     | '__root__'
     | '/'
@@ -289,6 +300,7 @@ export interface FileRouteTypes {
     | '/api/media/blob'
     | '/api/media/config'
     | '/api/media/sign'
+    | '/api/push/read'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -314,6 +326,7 @@ export interface RootRouteChildren {
   ApiMediaBlobRoute: typeof ApiMediaBlobRoute
   ApiMediaConfigRoute: typeof ApiMediaConfigRoute
   ApiMediaSignRoute: typeof ApiMediaSignRoute
+  ApiPushReadRoute: typeof ApiPushReadRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -472,6 +485,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMediaSignRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/push/read': {
+      id: '/api/push/read'
+      path: '/api/push/read'
+      fullPath: '/api/push/read'
+      preLoaderRoute: typeof ApiPushReadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -498,6 +518,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMediaBlobRoute: ApiMediaBlobRoute,
   ApiMediaConfigRoute: ApiMediaConfigRoute,
   ApiMediaSignRoute: ApiMediaSignRoute,
+  ApiPushReadRoute: ApiPushReadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

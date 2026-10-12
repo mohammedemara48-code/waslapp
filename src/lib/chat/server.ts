@@ -230,8 +230,8 @@ export const sendMessage = createServerFn({ method: "POST" })
   })
   .handler(async ({ context, data }) => {
     const sql = await getSql();
-    const rooms = await sql<{ id: number; kind: string }>`
-      select id, kind from rooms where slug = ${data.slug} limit 1
+    const rooms = await sql<{ id: number; kind: string; name: string }>`
+      select id, kind, name from rooms where slug = ${data.slug} limit 1
     `;
     const room = rooms[0];
     if (!room) throw new Error("الغرفة غير موجودة");
@@ -279,25 +279,32 @@ export const sendMessage = createServerFn({ method: "POST" })
       from profiles where user_id = ${context.userId} limit 1
     `;
     const profile = profiles[0];
-    if (room.kind === "dm") {
+    {
+      const isDm = room.kind === "dm";
       const others = await sql<{ user_id: string }>`
-        select user_id from room_members where room_id = ${room.id} and user_id <> ${context.userId}
+        select rm.user_id from room_members rm
+        where rm.room_id = ${room.id} and rm.user_id <> ${context.userId}
+          and not exists (
+            select 1 from mutes mu where mu.muter_id = rm.user_id and mu.muted_id = ${context.userId}
+          )
+          and not exists (
+            select 1 from blocks b
+            where (b.blocker_id = rm.user_id and b.blocked_id = ${context.userId})
+               or (b.blocker_id = ${context.userId} and b.blocked_id = rm.user_id)
+          )
+        limit 200
       `;
-      const preview = data.body || (data.attachment ? "مرفق جديد" : "رسالة");
-      for (const other of others) {
-        const muted = await sql<{ muter_id: string }>`
-          select muter_id from mutes where muter_id = ${other.user_id} and muted_id = ${context.userId} limit 1
-        `;
-        if (muted[0]) continue;
-        await notifyUser(
-          sql,
-          other.user_id,
-          "message",
-          profile?.display_name ?? "رسالة خاصة",
-          preview.slice(0, 140),
-          `/r/${data.slug}`,
-        );
-      }
+      const isCallEvent = data.attachment?.type === "call-event";
+      const preview = data.body || (isCallEvent ? "مكالمة فائتة" : data.attachment ? "مرفق جديد" : "رسالة");
+      const sender = profile?.display_name ?? (isDm ? "رسالة خاصة" : "رسالة");
+      const roomTitle = room.name || null;
+      const title = isDm ? sender : `${roomTitle || data.slug}`;
+      const body = isDm ? preview.slice(0, 140) : `${sender}: ${preview}`.slice(0, 140);
+      await Promise.all(
+        others.map((other) =>
+          notifyUser(sql, other.user_id, "message", title, body, `/r/${data.slug}`).catch(() => {}),
+        ),
+      );
     }
     return {
       id: saved.id,

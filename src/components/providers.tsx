@@ -10,6 +10,7 @@ import { RadioProvider } from "@/lib/radio";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { RadioDock } from "@/components/radio-dock";
 import { IncomingCallBanner } from "@/components/incoming-call-banner";
+import { IosInstallHint } from "@/components/ios-install-hint";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "sonner";
 
@@ -76,6 +77,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
               <PresenceHeartbeat />
               {children}
               <IncomingCallBanner />
+              <IosInstallHint />
               <RadioDock />
               <DirAwareToaster />
             </RadioProvider>
