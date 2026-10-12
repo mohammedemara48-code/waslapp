@@ -34,6 +34,10 @@ function ProfileSync() {
 function PwaBoot() {
   useEffect(() => {
     registerServiceWorker();
+    // Firebase is client-only: load lazily in the browser, never during SSR.
+    void import("@/lib/firebase")
+      .then((m) => m.initFirebaseAnalytics())
+      .catch(() => {});
   }, []);
   return null;
 }
