@@ -35,6 +35,33 @@ async function getWebPush(): Promise<WebPush | null> {
   }
 }
 
+function readSecret(): string {
+  return (process.env.BETTER_AUTH_SECRET || "").trim();
+}
+
+/** HMAC token so the service worker can mark one chat read without a session. */
+export async function signReadToken(userId: string, href: string): Promise<string> {
+  const secret = readSecret();
+  if (!secret) return "";
+  const { createHmac } = await import("node:crypto");
+  return createHmac("sha256", secret).update(`read:${userId}:${href}`).digest("base64url");
+}
+
+export async function verifyReadToken(userId: string, href: string, token: string): Promise<boolean> {
+  const expected = await signReadToken(userId, href);
+  if (!expected || !token || expected.length !== token.length) return false;
+  const { timingSafeEqual } = await import("node:crypto");
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(token));
+}
+
+/** Run push delivery after the response when on Vercel; never block the caller. */
+function runInBackground(task: Promise<unknown>) {
+  const safe = task.catch(() => {});
+  void import("@vercel/functions")
+    .then((m) => m.waitUntil(safe))
+    .catch(() => {});
+}
+
 export async function notifyUser(
   sql: Sql,
   userId: string,
@@ -47,17 +74,33 @@ export async function notifyUser(
     insert into notifications (user_id, kind, title, body, href)
     values (${userId}, ${kind}, ${title}, ${body}, ${href})
   `;
-  try {
-    await sendPushToUser(sql, userId, { title, body, href: href ?? "/" });
-  } catch {
-    /* push must never block the app */
-  }
+  runInBackground(
+    (async () => {
+      const target = href ?? "/";
+      const unread = await sql<{ n: number }>`
+        select count(*)::int as n from notifications where user_id = ${userId} and read = false
+      `;
+      const chat = target.match(/^\/r\/([a-zA-Z0-9_-]+)/)?.[1] ?? null;
+      const token = chat ? await signReadToken(userId, `/r/${chat}`) : "";
+      await sendPushToUser(sql, userId, {
+        title,
+        body,
+        href: target,
+        kind,
+        tag: kind === "call" ? `call-${chat ?? "x"}` : chat ? `chat-${chat}` : `wasl-${kind}`,
+        badge: unread[0]?.n ?? 0,
+        uid: userId,
+        readHref: chat ? `/r/${chat}` : null,
+        readToken: token || null,
+      });
+    })(),
+  );
 }
 
 export async function sendPushToUser(
   sql: Sql,
   userId: string,
-  payload: { title: string; body: string; href: string },
+  payload: Record<string, unknown> & { title: string; body: string; href: string },
 ) {
   const webpush = await getWebPush();
   if (!webpush) return;
@@ -72,7 +115,7 @@ export async function sendPushToUser(
         await webpush.sendNotification(
           { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
           json,
-          { TTL: 60 * 60 * 12, urgency: "high" },
+          { TTL: payload.kind === "call" ? 60 : 60 * 60 * 12, urgency: "high" },
         );
       } catch (err) {
         const status = (err as { statusCode?: number }).statusCode;
