@@ -16,6 +16,7 @@ import { Pool } from "pg";
 import { ensureDbReady, getPglite } from "../db";
 import { emailAndPasswordEnabled } from "./email-password";
 import { pgliteDialect } from "./pglite-dialect";
+import { firebaseGoogle } from "./firebase-google";
 
 void ensureDbReady();
 
@@ -137,7 +138,7 @@ export const auth = betterAuth({
       dont_remember: { name: "__Host-wasl-auth.dont_remember" },
     },
   },
-  plugins: [bearer(), tanstackStartCookies()],
+  plugins: [bearer(), firebaseGoogle(), tanstackStartCookies()],
 });
 
 export function readSessionToken(): string | null {
