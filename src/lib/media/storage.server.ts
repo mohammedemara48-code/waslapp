@@ -39,7 +39,7 @@ export async function presignS3Upload(input: { filename: string; type: string; s
   if (input.size > REMOTE_FILE_MAX_BYTES) throw new Error("الملف أكبر من 80 ميغابايت");
   const bucket = env("S3_BUCKET");
   if (!bucket) throw new Error("S3_BUCKET غير مضبوط");
-  const safe = input.filename.replace(/[^\w.\-]+/g, "_").slice(0, 80) || "file";
+  const safe = input.filename.replace(/[^\w.-]+/g, "_").slice(0, 80) || "file";
   const key = `wasl/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
   const command = new PutObjectCommand({
     Bucket: bucket,

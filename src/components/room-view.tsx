@@ -389,16 +389,6 @@ export function RoomView({ slug }: { slug: string }) {
 
   const room = roomQuery.data?.room;
   const members = roomQuery.data?.members ?? [];
-  if (roomQuery.isError) {
-    return (
-      <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-bg px-6 text-center text-fg">
-        <p className="font-display text-3xl">هذه الغرفة غير موجودة</p>
-        <Link to="/" className="text-sm text-accent hover:underline">
-          العودة إلى الغرف
-        </Link>
-      </div>
-    );
-  }
   const livePeers = p2p.peers.filter((p) => p.connectionState === "connected");
 
   const grouped = useMemo(() => {
@@ -411,6 +401,17 @@ export function RoomView({ slug }: { slug: string }) {
     }
     return days;
   }, [messages]);
+
+  if (roomQuery.isError) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-bg px-6 text-center text-fg">
+        <p className="font-display text-3xl">هذه الغرفة غير موجودة</p>
+        <Link to="/" className="text-sm text-accent hover:underline">
+          العودة إلى الغرف
+        </Link>
+      </div>
+    );
+  }
 
   const peoplePanel = (
     <div className="flex h-full flex-col">
